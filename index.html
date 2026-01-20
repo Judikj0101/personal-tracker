@@ -245,6 +245,7 @@
             border: 1px solid var(--border-light);
             border-radius: 6px;
             min-height: 120px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .lane-header {
@@ -256,6 +257,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: rgba(0, 0, 0, 0.2);
         }
 
         .lane-count {
@@ -386,6 +388,12 @@
             border-radius: 6px;
             padding: var(--spacing-md);
             margin-bottom: var(--spacing-md);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: box-shadow 0.2s;
+        }
+
+        .cockpit-section:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
         .cockpit-section:last-child {
@@ -479,6 +487,12 @@
             border-radius: 6px;
             padding: var(--spacing-md);
             margin-bottom: var(--spacing-md);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: box-shadow 0.2s;
+        }
+
+        .goal-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
         .goal-card:last-child {
@@ -892,9 +906,134 @@
 
         /* Screen containers should take full width */
         #logsScreen,
-        #settingsScreen {
+        #settingsScreen,
+        #rewardBankScreen {
             max-width: 1400px;
             margin: 0 auto;
+        }
+
+        /* Reward Bank */
+        .reward-bank-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-xl);
+            background: var(--bg-medium);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .reward-bank-balance {
+            text-align: left;
+        }
+
+        .balance-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .balance-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            line-height: 1;
+        }
+
+        .reward-bank-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-xl);
+        }
+
+        .reward-section {
+            background: var(--bg-medium);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+        }
+
+        .reward-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .reward-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            transition: all 0.2s;
+        }
+
+        .reward-item:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.2);
+        }
+
+        .reward-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .reward-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .reward-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .reward-cost {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            white-space: nowrap;
+        }
+
+        .reward-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .reward-actions {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .reward-item.purchased {
+            opacity: 0.6;
+            border-color: var(--border);
+        }
+
+        .reward-item.purchased:hover {
+            border-color: var(--border);
+            box-shadow: none;
+        }
+
+        .reward-purchased-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: var(--spacing-xs);
+        }
+
+        @media (max-width: 1024px) {
+            .reward-bank-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -931,6 +1070,7 @@
             </div>
             <div class="nav-right">
                 <button class="btn" onclick="app.showDashboard()">Dashboard</button>
+                <button class="btn" onclick="app.showRewardBankScreen()">Rewards</button>
                 <button class="btn" onclick="app.showLogsScreen()">Logs</button>
                 <button class="btn" onclick="app.showSettingsScreen()">Settings</button>
                 <button class="btn btn-danger" onclick="app.resetData()">Reset</button>
@@ -1092,6 +1232,31 @@
                 <div class="settings-section">
                     <div class="settings-title">Claimed Rewards</div>
                     <div id="rewardsHistory"></div>
+                </div>
+            </div>
+
+            <!-- Reward Bank Screen -->
+            <div id="rewardBankScreen" class="hidden">
+                <div class="reward-bank-header">
+                    <div class="reward-bank-balance">
+                        <div class="balance-label">Available XP</div>
+                        <div class="balance-value" id="availableXP">0</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.showAddRewardModal()">+ Add Reward</button>
+                </div>
+
+                <div class="reward-bank-grid">
+                    <!-- Available Rewards -->
+                    <div class="reward-section">
+                        <div class="reward-section-title">🎁 Available Rewards</div>
+                        <div id="availableRewardsList"></div>
+                    </div>
+
+                    <!-- Purchased Rewards -->
+                    <div class="reward-section">
+                        <div class="reward-section-title">✅ Purchased Rewards</div>
+                        <div id="purchasedRewardsList"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1356,6 +1521,34 @@
         </div>
     </div>
 
+    <!-- Add Reward Modal -->
+    <div class="modal" id="addRewardModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Add Reward to Bank</div>
+                <button class="modal-close" onclick="app.closeModal('addRewardModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Reward Name</label>
+                    <input type="text" class="form-input" id="rewardName" placeholder="e.g. New keyboard, Day off, Massage">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description (optional)</label>
+                    <textarea class="form-textarea" id="rewardDescription" placeholder="Details about this reward..." style="min-height: 80px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">XP Cost</label>
+                    <input type="number" class="form-input" id="rewardCost" placeholder="e.g. 100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="app.closeModal('addRewardModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.saveReward()">Add to Bank</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Phase Complete Modal -->
     <div class="modal" id="phaseCompleteModal">
         <div class="modal-content">
@@ -1435,6 +1628,7 @@
             ensureDataStructure() {
                 if (!this.gameData.dailyXP) this.gameData.dailyXP = {};
                 if (!this.gameData.rewards) this.gameData.rewards = { claimed: [], available: [] };
+                if (!this.gameData.rewardBank) this.gameData.rewardBank = { available: [], purchased: [] };
                 if (!this.gameData.weeklyReviews) this.gameData.weeklyReviews = [];
                 if (!this.gameData.activeQuests) this.gameData.activeQuests = [];
                 if (this.gameData.phaseCompleted === undefined) this.gameData.phaseCompleted = false;
@@ -1524,6 +1718,7 @@
                         { level: 5, min_xp: 300 }
                     ],
                     rewards: { claimed: [], available: [] },
+                    rewardBank: { available: [], purchased: [] },
                     weeklyReviews: [],
                     phaseCompleted: false,
                     phaseCompletedAt: null,
@@ -2092,13 +2287,23 @@
             showSettingsScreen() {
                 document.getElementById('dashboardGrid').classList.add('hidden');
                 document.getElementById('logsScreen').classList.add('hidden');
+                document.getElementById('rewardBankScreen').classList.add('hidden');
                 document.getElementById('settingsScreen').classList.remove('hidden');
                 this.renderSettingsScreen();
+            },
+
+            showRewardBankScreen() {
+                document.getElementById('dashboardGrid').classList.add('hidden');
+                document.getElementById('logsScreen').classList.add('hidden');
+                document.getElementById('settingsScreen').classList.add('hidden');
+                document.getElementById('rewardBankScreen').classList.remove('hidden');
+                this.renderRewardBankScreen();
             },
 
             showDashboard() {
                 document.getElementById('logsScreen').classList.add('hidden');
                 document.getElementById('settingsScreen').classList.add('hidden');
+                document.getElementById('rewardBankScreen').classList.add('hidden');
                 document.getElementById('dashboardGrid').classList.remove('hidden');
                 this.render();
             },
@@ -2699,6 +2904,150 @@
                 
                 this.showBanner('New Phase Started', 'Set your new goals in Settings!');
                 this.showSettingsScreen();
+            },
+
+            // Reward Bank Functions
+            showAddRewardModal() {
+                document.getElementById('rewardName').value = '';
+                document.getElementById('rewardDescription').value = '';
+                document.getElementById('rewardCost').value = '';
+                this.openModal('addRewardModal');
+            },
+
+            saveReward() {
+                const name = document.getElementById('rewardName').value;
+                const description = document.getElementById('rewardDescription').value;
+                const cost = parseInt(document.getElementById('rewardCost').value);
+
+                if (!name.trim()) {
+                    alert('Please enter a reward name');
+                    return;
+                }
+
+                if (!cost || cost <= 0) {
+                    alert('Please enter a valid XP cost');
+                    return;
+                }
+
+                const newReward = {
+                    id: 'RWD-' + Date.now(),
+                    name: name.trim(),
+                    description: description.trim(),
+                    cost,
+                    created_at: new Date().toISOString()
+                };
+
+                this.gameData.rewardBank.available.push(newReward);
+                this.addLog('reward_added', `Reward added: ${name} (${cost} XP)`);
+                this.saveData();
+
+                this.closeModal('addRewardModal');
+                this.renderRewardBankScreen();
+                this.showBanner('Reward Added', `${name} added to bank`);
+            },
+
+            purchaseReward(rewardId) {
+                const reward = this.gameData.rewardBank.available.find(r => r.id === rewardId);
+                if (!reward) return;
+
+                if (this.gameData.totalXP < reward.cost) {
+                    alert(`Not enough XP! You need ${reward.cost} XP but only have ${this.gameData.totalXP} XP.`);
+                    return;
+                }
+
+                if (!confirm(`Purchase "${reward.name}" for ${reward.cost} XP?`)) return;
+
+                // Deduct XP
+                this.gameData.totalXP -= reward.cost;
+
+                // Move to purchased
+                reward.purchased_at = new Date().toISOString();
+                this.gameData.rewardBank.purchased.push(reward);
+                this.gameData.rewardBank.available = this.gameData.rewardBank.available.filter(r => r.id !== rewardId);
+
+                this.addLog('reward_purchased', `Purchased: ${reward.name} (-${reward.cost} XP)`, {
+                    reward_id: rewardId,
+                    cost: reward.cost
+                });
+
+                this.saveData();
+                this.renderRewardBankScreen();
+                this.render(); // Update XP in header
+                this.showBanner('Reward Purchased!', `${reward.name} - Enjoy!`);
+            },
+
+            deleteReward(rewardId, isPurchased = false) {
+                const list = isPurchased ? this.gameData.rewardBank.purchased : this.gameData.rewardBank.available;
+                const reward = list.find(r => r.id === rewardId);
+                if (!reward) return;
+
+                if (!confirm(`Delete "${reward.name}"?`)) return;
+
+                if (isPurchased) {
+                    this.gameData.rewardBank.purchased = this.gameData.rewardBank.purchased.filter(r => r.id !== rewardId);
+                } else {
+                    this.gameData.rewardBank.available = this.gameData.rewardBank.available.filter(r => r.id !== rewardId);
+                }
+
+                this.addLog('reward_deleted', `Reward deleted: ${reward.name}`);
+                this.saveData();
+                this.renderRewardBankScreen();
+            },
+
+            renderRewardBankScreen() {
+                // Available XP
+                document.getElementById('availableXP').textContent = this.gameData.totalXP;
+
+                // Available Rewards
+                const availableList = document.getElementById('availableRewardsList');
+                if (this.gameData.rewardBank.available.length === 0) {
+                    availableList.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: var(--spacing-xl);">No rewards yet. Add some rewards to work towards!</div>';
+                } else {
+                    availableList.innerHTML = this.gameData.rewardBank.available.map(reward => {
+                        const canAfford = this.gameData.totalXP >= reward.cost;
+                        return `
+                            <div class="reward-item">
+                                <div class="reward-header">
+                                    <div class="reward-name">${reward.name}</div>
+                                    <div class="reward-cost">${reward.cost} XP</div>
+                                </div>
+                                ${reward.description ? `<div class="reward-description">${reward.description}</div>` : ''}
+                                <div class="reward-actions">
+                                    <button class="btn btn-small ${canAfford ? 'btn-primary' : ''}" 
+                                            onclick="app.purchaseReward('${reward.id}')"
+                                            ${!canAfford ? 'disabled' : ''}>
+                                        ${canAfford ? '🛒 Purchase' : '🔒 Need ' + (reward.cost - this.gameData.totalXP) + ' more XP'}
+                                    </button>
+                                    <button class="btn btn-small btn-danger" onclick="app.deleteReward('${reward.id}', false)">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // Purchased Rewards
+                const purchasedList = document.getElementById('purchasedRewardsList');
+                if (this.gameData.rewardBank.purchased.length === 0) {
+                    purchasedList.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: var(--spacing-xl);">No purchased rewards yet</div>';
+                } else {
+                    purchasedList.innerHTML = this.gameData.rewardBank.purchased.map(reward => {
+                        const date = new Date(reward.purchased_at);
+                        const dateStr = date.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', year: 'numeric' });
+                        return `
+                            <div class="reward-item purchased">
+                                <div class="reward-header">
+                                    <div class="reward-name">✅ ${reward.name}</div>
+                                    <div class="reward-cost" style="text-decoration: line-through; opacity: 0.5;">${reward.cost} XP</div>
+                                </div>
+                                ${reward.description ? `<div class="reward-description">${reward.description}</div>` : ''}
+                                <div class="reward-purchased-date">Purchased: ${dateStr}</div>
+                                <div class="reward-actions" style="margin-top: var(--spacing-sm);">
+                                    <button class="btn btn-small btn-danger" onclick="app.deleteReward('${reward.id}', true)">Remove</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
             },
 
             // Export/Import
