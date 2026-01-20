@@ -1,0 +1,2962 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifico Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0e14;
+            --bg-medium: #14181f;
+            --bg-light: #1e2329;
+            --bg-card: #181c23;
+            --accent-primary: #00ff88;
+            --accent-secondary: #00ccff;
+            --accent-warn: #ffaa00;
+            --accent-danger: #ff3366;
+            --text-primary: #e6e8eb;
+            --text-secondary: #8b92a0;
+            --text-muted: #5a5f6a;
+            --border: #2a2f38;
+            --border-light: #1e2329;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 0.75rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* PIN Screen */
+        .pin-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .pin-screen.hidden {
+            display: none;
+        }
+
+        .pin-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 2rem;
+            letter-spacing: 0.2em;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            background: var(--bg-medium);
+            border-bottom: 1px solid var(--border);
+            padding: var(--spacing-md) var(--spacing-xl);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            gap: var(--spacing-lg);
+        }
+
+        .nav-left, .nav-center, .nav-right {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+        }
+
+        .nav-left {
+            flex: 1;
+        }
+
+        .nav-center {
+            flex: 0 0 auto;
+        }
+
+        .nav-right {
+            flex: 1;
+            justify-content: flex-end;
+        }
+
+        .app-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent-primary);
+        }
+
+        .phase-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: var(--bg-light);
+            border-radius: 4px;
+        }
+
+        /* Streak Indicator */
+        .streak-indicator {
+            display: flex;
+            gap: var(--spacing-lg);
+            align-items: center;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--bg-light);
+            border-radius: 6px;
+        }
+
+        .streak-item {
+            text-align: center;
+        }
+
+        .streak-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .streak-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--bg-card);
+            border-color: var(--text-secondary);
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: var(--bg-dark);
+            border-color: var(--accent-primary);
+        }
+
+        .btn-primary:hover {
+            background: #00dd77;
+            border-color: #00dd77;
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--accent-danger);
+            border-color: var(--accent-danger);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 51, 102, 0.1);
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.7rem;
+            font-size: 0.8rem;
+        }
+
+        /* Main Container */
+        .container {
+            padding: var(--spacing-xl);
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* Three Column Grid */
+        .three-column-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px 350px;
+            gap: var(--spacing-lg);
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Panel Styles */
+        .panel {
+            background: var(--bg-medium);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            height: fit-content;
+        }
+
+        .panel-header {
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-bottom: 1px solid var(--border-light);
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .panel-content {
+            padding: var(--spacing-lg);
+            flex: 1;
+        }
+
+        /* Work Board (Kanban) */
+        .work-board {
+            height: fit-content;
+        }
+
+        .kanban-lanes {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        .kanban-lane {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            min-height: 120px;
+        }
+
+        .lane-header {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lane-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .lane-content {
+            padding: var(--spacing-sm);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            min-height: 80px;
+        }
+
+        .lane-content.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            padding: var(--spacing-lg);
+        }
+
+        /* Quest Card */
+        .quest-card {
+            background: var(--bg-medium);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: var(--spacing-md);
+            cursor: move;
+            transition: all 0.2s;
+        }
+
+        .quest-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 1px var(--accent-primary);
+        }
+
+        .quest-card.dragging {
+            opacity: 0.5;
+        }
+
+        .quest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--spacing-sm);
+            gap: var(--spacing-sm);
+        }
+
+        .quest-title {
+            font-weight: 500;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+
+        .quest-type-badge {
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .badge-daily {
+            background: var(--accent-secondary);
+            color: var(--bg-dark);
+        }
+
+        .badge-side {
+            background: var(--accent-warn);
+            color: var(--bg-dark);
+        }
+
+        .badge-boss {
+            background: var(--accent-danger);
+            color: white;
+        }
+
+        .quest-meta {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .quest-skill {
+            color: var(--text-muted);
+        }
+
+        .quest-xp {
+            color: var(--accent-primary);
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .quest-timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.2rem 0.5rem;
+            background: var(--bg-light);
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        .quest-timer.running {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--accent-primary);
+        }
+
+        .quest-controls {
+            display: flex;
+            gap: var(--spacing-xs);
+            margin-top: var(--spacing-sm);
+        }
+
+        /* Cockpit */
+        .cockpit-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .cockpit-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-md);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Win Conditions */
+        .win-condition {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .win-condition:last-child {
+            border-bottom: none;
+        }
+
+        .win-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-radius: 3px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .win-checkbox.completed {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .win-checkbox.completed::after {
+            content: '✓';
+            color: var(--bg-dark);
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .win-label {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .win-progress {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        /* Focus Timer Widget */
+        .focus-timer {
+            text-align: center;
+        }
+
+        .timer-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin: var(--spacing-md) 0;
+        }
+
+        .timer-presets {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .timer-presets button {
+            flex: 1;
+        }
+
+        /* Goals Panel */
+        .goal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .goal-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .goal-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .goal-progress {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-primary);
+        }
+
+        .goal-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) 0;
+            font-size: 0.9rem;
+        }
+
+        .goal-item.completed {
+            opacity: 0.5;
+        }
+
+        .goal-item.completed .goal-item-label {
+            text-decoration: line-through;
+        }
+
+        .goal-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-radius: 3px;
+            flex-shrink: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .goal-checkbox.completed {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .goal-checkbox.completed::after {
+            content: '✓';
+            color: var(--bg-dark);
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .goal-item-label {
+            flex: 1;
+        }
+
+        .goal-item-edit {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .goal-item:hover .goal-item-edit {
+            opacity: 1;
+        }
+
+        /* Counter Card */
+        .counter-display {
+            text-align: center;
+            padding: var(--spacing-lg) 0;
+        }
+
+        .counter-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            line-height: 1;
+        }
+
+        .counter-controls {
+            margin-top: var(--spacing-md);
+        }
+
+        .recent-activity {
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .activity-item {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: var(--spacing-xs) 0;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(10, 14, 20, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: var(--spacing-xl);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-medium);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: var(--spacing-lg);
+        }
+
+        .modal-footer {
+            padding: var(--spacing-lg);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Banner Notifications */
+        .banner {
+            position: fixed;
+            bottom: var(--spacing-xl);
+            right: var(--spacing-xl);
+            background: var(--bg-medium);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent-primary);
+            border-radius: 6px;
+            padding: var(--spacing-md) var(--spacing-lg);
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .banner.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .banner.warning {
+            border-left-color: var(--accent-warn);
+        }
+
+        .banner-title {
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .banner-message {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .banner-close {
+            position: absolute;
+            top: var(--spacing-sm);
+            right: var(--spacing-sm);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* Settings Screen */
+        .settings-section {
+            background: var(--bg-medium);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .settings-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            color: var(--accent-primary);
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+
+        .settings-label {
+            font-size: 0.9rem;
+        }
+
+        /* Logs Table */
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .logs-table th {
+            text-align: left;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .logs-table td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.9rem;
+        }
+
+        .logs-table tr:hover {
+            background: var(--bg-card);
+        }
+
+        .log-type {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .log-type-quest {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--accent-primary);
+        }
+
+        .log-type-goal {
+            background: rgba(0, 204, 255, 0.2);
+            color: var(--accent-secondary);
+        }
+
+        .log-type-reward {
+            background: rgba(255, 170, 0, 0.2);
+            color: var(--accent-warn);
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .three-column-grid {
+                grid-template-columns: 1fr 350px;
+            }
+            
+            .goals-panel {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .three-column-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .top-nav {
+                flex-wrap: wrap;
+            }
+            
+            .nav-center {
+                order: 3;
+                flex-basis: 100%;
+                justify-content: center;
+                margin-top: var(--spacing-md);
+            }
+        }
+
+        /* Add Quest Form */
+        .quick-add-form {
+            display: flex;
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
+        }
+
+        .quick-add-form input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .quick-add-form select {
+            width: auto;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-md {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .mt-md {
+            margin-top: var(--spacing-md);
+        }
+
+        /* Screen containers should take full width */
+        #logsScreen,
+        #settingsScreen {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Start Screen -->
+    <div class="pin-screen" id="startScreen">
+        <div class="pin-logo">VERIFICO GAME</div>
+        <button class="btn btn-primary" id="startButton" style="font-size: 1.2rem; padding: 1rem 3rem; margin-top: 2rem;">START</button>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" style="display: none;">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <div class="nav-left">
+                <div class="app-name">Verifico Game</div>
+                <div class="phase-label">Phase: FOUNDATION → CASHFLOW</div>
+            </div>
+            <div class="nav-center">
+                <div class="streak-indicator">
+                    <div class="streak-item">
+                        <div class="streak-value" id="streakValue">0</div>
+                        <div class="streak-label">Streak</div>
+                    </div>
+                    <div class="streak-item">
+                        <div class="streak-value" id="todayXPValue">0</div>
+                        <div class="streak-label">Today XP</div>
+                    </div>
+                    <div class="streak-item">
+                        <div class="streak-value">/ 10</div>
+                        <div class="streak-label">Target</div>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-right">
+                <button class="btn" onclick="app.showDashboard()">Dashboard</button>
+                <button class="btn" onclick="app.showLogsScreen()">Logs</button>
+                <button class="btn" onclick="app.showSettingsScreen()">Settings</button>
+                <button class="btn btn-danger" onclick="app.resetData()">Reset</button>
+            </div>
+        </nav>
+
+        <!-- Main Container -->
+        <div class="container" id="mainContainer">
+            <!-- Dashboard (Three Column Grid) -->
+            <div class="three-column-grid" id="dashboardGrid">
+                <!-- Work Board (Left Column) -->
+                <div class="panel work-board">
+                    <div class="panel-header">Work Board</div>
+                    <div class="panel-content">
+                        <div class="kanban-lanes">
+                            <!-- Today Lane -->
+                            <div class="kanban-lane" data-lane="today">
+                                <div class="lane-header">
+                                    <span>Today</span>
+                                    <span class="lane-count" id="todayCount">0</span>
+                                </div>
+                                <div class="lane-content" id="todayLane"></div>
+                            </div>
+
+                            <!-- This Week Lane -->
+                            <div class="kanban-lane" data-lane="week">
+                                <div class="lane-header">
+                                    <span>This Week</span>
+                                    <span class="lane-count" id="weekCount">0</span>
+                                </div>
+                                <div class="lane-content" id="weekLane"></div>
+                            </div>
+
+                            <!-- Backlog Lane -->
+                            <div class="kanban-lane" data-lane="backlog">
+                                <div class="lane-header">
+                                    <span>Backlog</span>
+                                    <span class="lane-count" id="backlogCount">0</span>
+                                </div>
+                                <div class="lane-content" id="backlogLane"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cockpit (Center Column) -->
+                <div class="panel">
+                    <div class="panel-header">Cockpit</div>
+                    <div class="panel-content">
+                        <!-- Win Conditions -->
+                        <div class="cockpit-section">
+                            <div class="section-title">Win Conditions</div>
+                            <div id="winConditionsList"></div>
+                        </div>
+
+                        <!-- Focus Timer -->
+                        <div class="cockpit-section">
+                            <div class="section-title">Focus Timer</div>
+                            <div class="focus-timer">
+                                <div class="timer-display" id="focusTimerDisplay">25:00</div>
+                                <div class="timer-presets">
+                                    <button class="btn btn-small" onclick="app.setFocusTimer(25)">25 min</button>
+                                    <button class="btn btn-small" onclick="app.setFocusTimer(50)">50 min</button>
+                                    <button class="btn btn-small" onclick="app.resetFocusTimer()">Reset</button>
+                                </div>
+                                <button class="btn btn-primary" id="focusTimerBtn" onclick="app.toggleFocusTimer()">Start Focus</button>
+                            </div>
+                        </div>
+
+                        <!-- Today Actions -->
+                        <div class="cockpit-section">
+                            <div class="section-title">Quick Actions</div>
+                            <button class="btn btn-primary mb-md" style="width: 100%;" onclick="app.showAddQuestModal()">+ Add Quest</button>
+                            <button class="btn mb-md" style="width: 100%;" onclick="app.showTemplatesModal()">📋 Use Template</button>
+                            <button class="btn mb-md" style="width: 100%;" onclick="app.showWeeklyReview()">📊 Weekly Review</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goals Panel (Right Column) -->
+                <div class="panel goals-panel">
+                    <div class="panel-header">Goals</div>
+                    <div class="panel-content" id="goalsContent"></div>
+                </div>
+            </div>
+
+            <!-- Logs Screen -->
+            <div id="logsScreen" class="hidden">
+                <div class="settings-section">
+                    <div class="settings-title">Activity Logs</div>
+                    <div style="margin-bottom: var(--spacing-md);">
+                        <button class="btn btn-small" onclick="app.filterLogs('all')" id="filterAll">All</button>
+                        <button class="btn btn-small" onclick="app.filterLogs('quest_completed')" id="filterQuest">Quests</button>
+                        <button class="btn btn-small" onclick="app.filterLogs('goal_item_completed')" id="filterGoal">Goals</button>
+                        <button class="btn btn-small" onclick="app.filterLogs('xp_earned')" id="filterXP">XP</button>
+                    </div>
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Type</th>
+                                <th>Message</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Settings Screen -->
+            <div id="settingsScreen" class="hidden">
+                <div class="settings-section">
+                    <div class="settings-title">Quest Types & XP Values</div>
+                    <div id="questTypesSettings"></div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Daily XP Target</div>
+                    <div class="settings-item">
+                        <span class="settings-label">Minimum daily XP for streak</span>
+                        <input type="number" id="dailyXPTarget" class="form-input" style="width: 100px;" value="10">
+                    </div>
+                    <button class="btn btn-primary mt-md" onclick="app.saveDailyXPTarget()">Save Target</button>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Goals Management</div>
+                    <div id="goalsManagement"></div>
+                    <button class="btn btn-primary mt-md" onclick="app.showAddGoalModal()">+ Add Goal</button>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Quest Templates</div>
+                    <div id="questTemplatesSettings"></div>
+                    <button class="btn btn-primary mt-md" onclick="app.showAddTemplateModal()">+ Add Template</button>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Goals Management</div>
+                    <div id="goalsManagementSettings"></div>
+                    <button class="btn btn-primary mt-md" onclick="app.showAddGoalModal()">+ Add Goal</button>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Data Management</div>
+                    <div style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                        <button class="btn btn-primary" onclick="app.exportData()">📥 Export Data (JSON)</button>
+                        <button class="btn" onclick="app.importData()">📤 Import Data (JSON)</button>
+                        <button class="btn btn-danger" onclick="app.resetData()">🗑️ Reset All Data</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Weekly Reviews History</div>
+                    <div id="reviewsHistory"></div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Claimed Rewards</div>
+                    <div id="rewardsHistory"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Quest Modal -->
+    <div class="modal" id="completeQuestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Complete Quest</div>
+                <button class="modal-close" onclick="app.closeModal('completeQuestModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">What was the outcome?</label>
+                    <textarea class="form-textarea" id="questOutcome" placeholder="Describe what you completed..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Attachment Link (optional)</label>
+                    <input type="url" class="form-input" id="questLink" placeholder="https://...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="app.closeModal('completeQuestModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.confirmCompleteQuest()">Complete Quest</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Quest Modal -->
+    <div class="modal" id="addQuestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Add Quest</div>
+                <button class="modal-close" onclick="app.closeModal('addQuestModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="newQuestTitle" placeholder="What needs to be done?">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quest Type</label>
+                    <select class="form-select" id="newQuestType">
+                        <option value="QT-DAILY">Daily Quest (10 XP)</option>
+                        <option value="QT-SIDE">Side Quest (25 XP)</option>
+                        <option value="QT-BOSS">Boss Fight (100 XP)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Skill Tree</label>
+                    <select class="form-select" id="newQuestSkill">
+                        <option value="SKILL-PRODUCTIZATION">Productization</option>
+                        <option value="SKILL-SALES">Sales & Positioning</option>
+                        <option value="SKILL-DELIVERY">Audit & Delivery</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Lane</label>
+                    <select class="form-select" id="newQuestLane">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="backlog">Backlog</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">XP (optional override)</label>
+                    <input type="number" class="form-input" id="newQuestXP" placeholder="Leave empty for default">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="app.closeModal('addQuestModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.addQuest()">Add Quest</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Goal Item Modal -->
+    <div class="modal" id="editGoalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Edit Goal Item</div>
+                <button class="modal-close" onclick="app.closeModal('editGoalModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="editGoalStatus">
+                        <option value="todo">To Do</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Note</label>
+                    <textarea class="form-textarea" id="editGoalNote" placeholder="Add notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="app.resetGoalItem()">Reset to To Do</button>
+                <button class="btn" onclick="app.closeModal('editGoalModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.saveGoalEdit()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Increment Counter Modal -->
+    <div class="modal" id="counterModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="counterModalTitle">Increment Counter</div>
+                <button class="modal-close" onclick="app.closeModal('counterModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" id="counterModalPrompt">Details</label>
+                    <textarea class="form-textarea" id="counterNote" placeholder="Add details..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="app.closeModal('counterModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.confirmIncrementCounter()">Add +1</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Review Modal -->
+    <div class="modal" id="weeklyReviewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">📊 Weekly Review</div>
+                <button class="modal-close" onclick="app.closeModal('weeklyReviewModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">1. How much XP this week?</label>
+                    <textarea class="form-textarea" id="reviewQ1"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">2. What brought you closer to the 3 goals?</label>
+                    <textarea class="form-textarea" id="reviewQ2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">3. What was leverage vs. fake busy work?</label>
+                    <textarea class="form-textarea" id="reviewQ3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">4. What will you delete next week?</label>
+                    <textarea class="form-textarea" id="reviewQ4"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="app.closeModal('weeklyReviewModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.saveWeeklyReview()">Save Review</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reward Popup Modal -->
+    <div class="modal" id="rewardModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">🎁 Reward Unlocked!</div>
+                <button class="modal-close" onclick="app.closeModal('rewardModal')">×</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: var(--spacing-xl);">
+                <div style="font-size: 4rem; margin-bottom: var(--spacing-md);" id="rewardIcon">🎉</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-primary); margin-bottom: var(--spacing-sm);" id="rewardTitle">Level Up!</div>
+                <div style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);" id="rewardDescription">You've unlocked a new reward</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="app.closeModal('rewardModal')">Later</button>
+                <button class="btn btn-primary" onclick="app.claimReward()">Claim Reward</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Template Modal -->
+    <div class="modal" id="addTemplateModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Add Quest Template</div>
+                <button class="modal-close" onclick="app.closeModal('addTemplateModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Template Title</label>
+                    <input type="text" class="form-input" id="templateTitle" placeholder="e.g. Daily standup meeting">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quest Type</label>
+                    <select class="form-select" id="templateType">
+                        <option value="QT-DAILY">Daily Quest (10 XP)</option>
+                        <option value="QT-SIDE">Side Quest (25 XP)</option>
+                        <option value="QT-BOSS">Boss Fight (100 XP)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Skill Tree</label>
+                    <select class="form-select" id="templateSkill">
+                        <option value="SKILL-PRODUCTIZATION">Productization</option>
+                        <option value="SKILL-SALES">Sales & Positioning</option>
+                        <option value="SKILL-DELIVERY">Audit & Delivery</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Default XP (optional)</label>
+                    <input type="number" class="form-input" id="templateXP" placeholder="Leave empty for quest type default">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="app.closeModal('addTemplateModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.saveTemplate()">Save Template</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Use Templates Modal -->
+    <div class="modal" id="templatesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Quest Templates</div>
+                <button class="modal-close" onclick="app.closeModal('templatesModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="templatesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Goal Modal -->
+    <div class="modal" id="addGoalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Add New Goal</div>
+                <button class="modal-close" onclick="app.closeModal('addGoalModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Goal Name</label>
+                    <input type="text" class="form-input" id="newGoalName" placeholder="e.g. Launch Marketing Campaign">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Goal Type</label>
+                    <select class="form-select" id="newGoalType">
+                        <option value="checklist">Checklist (multiple items)</option>
+                        <option value="counter">Counter (numeric target)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="counterTargetGroup" style="display: none;">
+                    <label class="form-label">Target Value</label>
+                    <input type="number" class="form-input" id="newGoalTarget" placeholder="e.g. 10">
+                </div>
+                <div class="form-group" id="checklistItemsGroup">
+                    <label class="form-label">Checklist Items (one per line)</label>
+                    <textarea class="form-textarea" id="newGoalItems" placeholder="Item 1&#10;Item 2&#10;Item 3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="app.closeModal('addGoalModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.saveNewGoal()">Add Goal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase Complete Modal -->
+    <div class="modal" id="phaseCompleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">🎊 Phase Complete!</div>
+                <button class="modal-close" onclick="app.closeModal('phaseCompleteModal')">×</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: var(--spacing-xl);">
+                <div style="font-size: 5rem; margin-bottom: var(--spacing-lg);">🏆</div>
+                <div style="font-size: 1.8rem; font-weight: 700; color: var(--accent-primary); margin-bottom: var(--spacing-md);">
+                    FOUNDATION → CASHFLOW Complete!
+                </div>
+                <div style="color: var(--text-secondary); margin-bottom: var(--spacing-lg); line-height: 1.8;">
+                    Congratulations! You've achieved all win conditions:<br>
+                    ✓ 3 pages published<br>
+                    ✓ 3+ paid clients<br>
+                    ✓ 2+ closed audits
+                </div>
+                <div style="background: var(--bg-card); padding: var(--spacing-lg); border-radius: 8px; border: 1px solid var(--accent-primary);">
+                    <div style="font-weight: 600; margin-bottom: var(--spacing-sm);">What's Next?</div>
+                    <div style="color: var(--text-secondary); font-size: 0.95rem;">
+                        This is your foundation. Time to scale, systemize, and build leverage.
+                        Consider setting new goals for the next phase of growth.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="app.startNewPhase()">🚀 Start New Phase</button>
+                <button class="btn" onclick="app.closeModal('phaseCompleteModal')">Continue Current</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Banner Notification -->
+    <div class="banner" id="banner">
+        <button class="banner-close" onclick="app.hideBanner()">×</button>
+        <div class="banner-title" id="bannerTitle"></div>
+        <div class="banner-message" id="bannerMessage"></div>
+    </div>
+
+    <script>
+        const app = {
+            gameData: null,
+            questTimers: {},
+            focusTimer: null,
+            focusTimerInterval: null,
+            focusTimerSeconds: 0,
+            currentQuestToComplete: null,
+            currentGoalEdit: null,
+            currentCounterEdit: null,
+            currentReward: null,
+            currentLogFilter: 'all',
+            draggedQuest: null,
+
+            init() {
+                this.loadData();
+                this.checkAuth();
+                this.setupEventListeners();
+                this.startQuestTimerUpdates();
+            },
+
+            loadData() {
+                const saved = localStorage.getItem('verificoGameV2');
+                if (saved) {
+                    this.gameData = JSON.parse(saved);
+                    this.ensureDataStructure();
+                } else {
+                    this.initializeDefaultData();
+                }
+
+                const savedTimers = localStorage.getItem('verificoTimersV2');
+                if (savedTimers) {
+                    this.questTimers = JSON.parse(savedTimers);
+                }
+            },
+
+            ensureDataStructure() {
+                if (!this.gameData.dailyXP) this.gameData.dailyXP = {};
+                if (!this.gameData.rewards) this.gameData.rewards = { claimed: [], available: [] };
+                if (!this.gameData.weeklyReviews) this.gameData.weeklyReviews = [];
+                if (!this.gameData.activeQuests) this.gameData.activeQuests = [];
+                if (this.gameData.phaseCompleted === undefined) this.gameData.phaseCompleted = false;
+                if (!this.gameData.phaseCompletedAt) this.gameData.phaseCompletedAt = null;
+                if (!this.gameData.questTemplates) {
+                    this.gameData.questTemplates = [
+                        { id: 'TPL-1', title: 'Oldal: Hero + CTA kész', quest_type_id: 'QT-SIDE', skill_tree_id: 'SKILL-PRODUCTIZATION', xp: 25 },
+                        { id: 'TPL-2', title: 'Oldal: FAQ blokk (min 6 kérdés)', quest_type_id: 'QT-SIDE', skill_tree_id: 'SKILL-PRODUCTIZATION', xp: 25 },
+                        { id: 'TPL-3', title: 'Ügyfélszerzés: 10 megkeresés', quest_type_id: 'QT-SIDE', skill_tree_id: 'SKILL-SALES', xp: 25 },
+                        { id: 'TPL-4', title: 'Audit: riport 1 rész (30-60 perc)', quest_type_id: 'QT-DAILY', skill_tree_id: 'SKILL-DELIVERY', xp: 10 }
+                    ];
+                }
+                this.gameData.activeQuests.forEach(q => {
+                    if (!q.lane) q.lane = 'backlog';
+                });
+            },
+
+            initializeDefaultData() {
+                this.gameData = {
+                    schema_version: '2.0.0',
+                    totalXP: 0,
+                    currentLevel: 1,
+                    currentStreak: 0,
+                    lastActiveDate: null,
+                    dailyXP: {},
+                    activeQuests: [
+                        {
+                            id: 'Q1',
+                            title: 'Büfé oldal publikálás',
+                            quest_type_id: 'QT-BOSS',
+                            skill_tree_id: 'SKILL-PRODUCTIZATION',
+                            xp: 100,
+                            lane: 'today'
+                        },
+                        {
+                            id: 'Q2',
+                            title: 'Ügyfélszerzés: 10 megkeresés',
+                            quest_type_id: 'QT-SIDE',
+                            skill_tree_id: 'SKILL-SALES',
+                            xp: 25,
+                            lane: 'week'
+                        }
+                    ],
+                    goals: [
+                        {
+                            id: 'GOAL-PAGES',
+                            name: '3 aloldal befejezése',
+                            type: 'checklist',
+                            items: [
+                                { id: 'PAGE-BUFE', name: 'Büfé oldal publikálva', status: 'todo' },
+                                { id: 'PAGE-MOZGO', name: 'Mozgó bolt oldal publikálva', status: 'todo' },
+                                { id: 'PAGE-UJEGYSEG', name: 'Új egység nyitása oldal publikálva', status: 'todo' }
+                            ]
+                        },
+                        {
+                            id: 'GOAL-CLIENTS',
+                            name: 'Fizető ügyfelek',
+                            type: 'counter',
+                            value: 0,
+                            target: 3
+                        },
+                        {
+                            id: 'GOAL-AUDITS',
+                            name: 'Lezárt auditok',
+                            type: 'counter',
+                            value: 0,
+                            target: 2
+                        }
+                    ],
+                    questTypes: [
+                        { id: 'QT-DAILY', name: 'Daily', xp: 10 },
+                        { id: 'QT-SIDE', name: 'Side', xp: 25 },
+                        { id: 'QT-BOSS', name: 'Boss', xp: 100 }
+                    ],
+                    questTemplates: [
+                        { id: 'TPL-1', title: 'Oldal: Hero + CTA kész', quest_type_id: 'QT-SIDE', skill_tree_id: 'SKILL-PRODUCTIZATION', xp: 25 },
+                        { id: 'TPL-2', title: 'Oldal: FAQ blokk (min 6 kérdés)', quest_type_id: 'QT-SIDE', skill_tree_id: 'SKILL-PRODUCTIZATION', xp: 25 },
+                        { id: 'TPL-3', title: 'Ügyfélszerzés: 10 megkeresés', quest_type_id: 'QT-SIDE', skill_tree_id: 'SKILL-SALES', xp: 25 },
+                        { id: 'TPL-4', title: 'Audit: riport 1 rész (30-60 perc)', quest_type_id: 'QT-DAILY', skill_tree_id: 'SKILL-DELIVERY', xp: 10 }
+                    ],
+                    streak: { daily_min_xp: 10 },
+                    levels: [
+                        { level: 1, min_xp: 0 },
+                        { level: 2, min_xp: 50 },
+                        { level: 3, min_xp: 120 },
+                        { level: 4, min_xp: 200 },
+                        { level: 5, min_xp: 300 }
+                    ],
+                    rewards: { claimed: [], available: [] },
+                    weeklyReviews: [],
+                    phaseCompleted: false,
+                    phaseCompletedAt: null,
+                    logs: []
+                };
+                this.saveData();
+            },
+
+            saveData() {
+                localStorage.setItem('verificoGameV2', JSON.stringify(this.gameData));
+            },
+
+            saveTimers() {
+                localStorage.setItem('verificoTimersV2', JSON.stringify(this.questTimers));
+            },
+
+            checkAuth() {
+                const started = sessionStorage.getItem('verificoStarted');
+                if (started === 'true') {
+                    this.showApp();
+                }
+            },
+
+            setupEventListeners() {
+                // START button
+                const startBtn = document.getElementById('startButton');
+                if (startBtn) {
+                    startBtn.addEventListener('click', () => this.startApp());
+                }
+
+                // Drag and drop setup
+                this.setupDragAndDrop();
+            },
+
+            startApp() {
+                sessionStorage.setItem('verificoStarted', 'true');
+                this.showApp();
+            },
+
+            showApp() {
+                document.getElementById('startScreen').classList.add('hidden');
+                document.getElementById('mainApp').style.display = 'block';
+                this.focusTimerSeconds = 25 * 60; // Initialize focus timer
+                this.updateFocusTimerDisplay();
+                this.updateStreak();
+                this.render();
+            },
+
+            setupDragAndDrop() {
+                document.addEventListener('dragstart', (e) => {
+                    if (e.target.classList.contains('quest-card')) {
+                        this.draggedQuest = e.target.dataset.questId;
+                        e.target.classList.add('dragging');
+                    }
+                });
+
+                document.addEventListener('dragend', (e) => {
+                    if (e.target.classList.contains('quest-card')) {
+                        e.target.classList.remove('dragging');
+                    }
+                });
+
+                document.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    const lane = e.target.closest('.lane-content');
+                    if (lane) {
+                        lane.style.background = 'rgba(0, 255, 136, 0.05)';
+                    }
+                });
+
+                document.addEventListener('dragleave', (e) => {
+                    const lane = e.target.closest('.lane-content');
+                    if (lane) {
+                        lane.style.background = '';
+                    }
+                });
+
+                document.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const lane = e.target.closest('.lane-content');
+                    if (lane && this.draggedQuest) {
+                        const laneType = lane.id.replace('Lane', '');
+                        this.moveQuestToLane(this.draggedQuest, laneType);
+                        lane.style.background = '';
+                        this.draggedQuest = null;
+                    }
+                });
+            },
+
+            moveQuestToLane(questId, lane) {
+                const quest = this.gameData.activeQuests.find(q => q.id === questId);
+                if (quest) {
+                    quest.lane = lane;
+                    this.addLog('quest_moved', `Moved: ${quest.title} → ${lane}`);
+                    this.saveData();
+                    this.render();
+                }
+            },
+
+            getTodayKey() {
+                return new Date().toISOString().split('T')[0];
+            },
+
+            getTodayXP() {
+                const today = this.getTodayKey();
+                return this.gameData.dailyXP[today] || 0;
+            },
+
+            updateStreak() {
+                const today = this.getTodayKey();
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                
+                const todayXP = this.gameData.dailyXP[today] || 0;
+                
+                if (this.gameData.lastActiveDate === yesterday && todayXP >= this.gameData.streak.daily_min_xp) {
+                    this.gameData.currentStreak++;
+                } else if (this.gameData.lastActiveDate !== today && todayXP === 0) {
+                    if (this.gameData.currentStreak > 0) {
+                        this.addLog('streak_broken', `Streak broken: ${this.gameData.currentStreak} days`);
+                        this.gameData.currentStreak = 0;
+                    }
+                }
+
+                if (todayXP >= this.gameData.streak.daily_min_xp && this.gameData.currentStreak === 0) {
+                    this.gameData.currentStreak = 1;
+                }
+
+                this.gameData.lastActiveDate = today;
+                this.saveData();
+            },
+
+            addXP(amount, source) {
+                const today = this.getTodayKey();
+                if (!this.gameData.dailyXP[today]) {
+                    this.gameData.dailyXP[today] = 0;
+                }
+                this.gameData.dailyXP[today] += amount;
+                this.gameData.totalXP += amount;
+
+                this.addLog('xp_earned', `+${amount} XP: ${source}`, { xp: amount });
+
+                // Check level up
+                const oldLevel = this.gameData.currentLevel;
+                this.updateLevel();
+                if (this.gameData.currentLevel > oldLevel) {
+                    this.showReward({
+                        type: 'level_up',
+                        title: `Level ${this.gameData.currentLevel} Achieved!`,
+                        description: 'Reward: Tool/könyv/kurzus vásárlás vagy upgrade',
+                        level: this.gameData.currentLevel
+                    });
+                }
+
+                // Check XP milestones
+                if (this.gameData.totalXP >= 500 && !this.gameData.rewards.claimed.find(r => r.type === 'xp_milestone' && r.milestone === 500)) {
+                    this.showReward({
+                        type: 'xp_milestone',
+                        title: '500 XP Milestone!',
+                        description: 'Reward: Kiszervezés vagy folyamat egyszerűsítése',
+                        milestone: 500
+                    });
+                }
+
+                this.saveData();
+                this.render();
+            },
+
+            updateLevel() {
+                const levels = this.gameData.levels.sort((a, b) => b.min_xp - a.min_xp);
+                for (let levelData of levels) {
+                    if (this.gameData.totalXP >= levelData.min_xp) {
+                        this.gameData.currentLevel = levelData.level;
+                        break;
+                    }
+                }
+            },
+
+            addLog(type, message, data = {}) {
+                this.gameData.logs.unshift({
+                    id: 'LOG-' + Date.now(),
+                    timestamp: new Date().toISOString(),
+                    type,
+                    message,
+                    data
+                });
+
+                if (this.gameData.logs.length > 100) {
+                    this.gameData.logs = this.gameData.logs.slice(0, 100);
+                }
+            },
+
+            // Quest Functions
+            showAddQuestModal() {
+                this.openModal('addQuestModal');
+            },
+
+            addQuest() {
+                const title = document.getElementById('newQuestTitle').value;
+                const typeId = document.getElementById('newQuestType').value;
+                const skillId = document.getElementById('newQuestSkill').value;
+                const lane = document.getElementById('newQuestLane').value;
+                const customXP = document.getElementById('newQuestXP').value;
+
+                if (!title.trim()) {
+                    alert('Please enter a quest title');
+                    return;
+                }
+
+                const questType = this.gameData.questTypes.find(qt => qt.id === typeId);
+                const xp = customXP ? parseInt(customXP) : questType.xp;
+
+                const newQuest = {
+                    id: 'Q-' + Date.now(),
+                    title,
+                    quest_type_id: typeId,
+                    skill_tree_id: skillId,
+                    lane,
+                    xp
+                };
+
+                this.gameData.activeQuests.push(newQuest);
+                this.addLog('quest_created', title);
+
+                document.getElementById('newQuestTitle').value = '';
+                document.getElementById('newQuestXP').value = '';
+
+                this.closeModal('addQuestModal');
+                this.saveData();
+                this.render();
+            },
+
+            completeQuest(questId) {
+                this.currentQuestToComplete = questId;
+                this.openModal('completeQuestModal');
+            },
+
+            confirmCompleteQuest() {
+                const outcome = document.getElementById('questOutcome').value;
+                const link = document.getElementById('questLink').value;
+
+                if (!outcome.trim()) {
+                    alert('Please describe the outcome');
+                    return;
+                }
+
+                const quest = this.gameData.activeQuests.find(q => q.id === this.currentQuestToComplete);
+                if (!quest) return;
+
+                // Stop timer if running
+                if (this.questTimers[quest.id]) {
+                    const elapsed = this.getQuestElapsedTime(quest.id);
+                    delete this.questTimers[quest.id];
+                    this.saveTimers();
+                }
+
+                this.addXP(quest.xp, quest.title);
+                this.addLog('quest_completed', quest.title, {
+                    xp: quest.xp,
+                    outcome,
+                    link
+                });
+
+                // Check for Boss Fight reward
+                if (quest.quest_type_id === 'QT-BOSS') {
+                    this.showReward({
+                        type: 'boss_fight',
+                        title: 'Boss Fight Complete!',
+                        description: 'Reward: Bűntudatmentes pihenőnap',
+                        quest_id: quest.id
+                    });
+                }
+
+                this.gameData.activeQuests = this.gameData.activeQuests.filter(q => q.id !== this.currentQuestToComplete);
+
+                document.getElementById('questOutcome').value = '';
+                document.getElementById('questLink').value = '';
+
+                this.closeModal('completeQuestModal');
+                this.saveData();
+                this.render();
+
+                this.showBanner('Quest Completed!', `+${quest.xp} XP earned`);
+            },
+
+            deleteQuest(questId) {
+                if (!confirm('Delete this quest?')) return;
+                
+                this.gameData.activeQuests = this.gameData.activeQuests.filter(q => q.id !== questId);
+                delete this.questTimers[questId];
+                this.saveTimers();
+                this.saveData();
+                this.render();
+            },
+
+            // Quest Timer
+            startQuestTimerUpdates() {
+                setInterval(() => {
+                    document.querySelectorAll('.quest-timer.running').forEach(el => {
+                        const questId = el.dataset.questId;
+                        if (this.questTimers[questId]) {
+                            const elapsed = this.getQuestElapsedTime(questId);
+                            el.querySelector('.timer-value').textContent = this.formatTime(elapsed);
+                        }
+                    });
+                }, 1000);
+            },
+
+            toggleQuestTimer(questId) {
+                if (!this.questTimers[questId]) {
+                    this.questTimers[questId] = { startTime: Date.now(), elapsed: 0 };
+                } else if (this.questTimers[questId].startTime) {
+                    this.questTimers[questId].elapsed = Date.now() - this.questTimers[questId].startTime + (this.questTimers[questId].elapsed || 0);
+                    delete this.questTimers[questId].startTime;
+                } else {
+                    this.questTimers[questId].startTime = Date.now() - this.questTimers[questId].elapsed;
+                }
+                this.saveTimers();
+                this.render();
+            },
+
+            getQuestElapsedTime(questId) {
+                if (!this.questTimers[questId]) return 0;
+                if (this.questTimers[questId].startTime) {
+                    return Date.now() - this.questTimers[questId].startTime + (this.questTimers[questId].elapsed || 0);
+                }
+                return this.questTimers[questId].elapsed || 0;
+            },
+
+            formatTime(ms) {
+                const seconds = Math.floor(ms / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                
+                if (hours > 0) {
+                    return `${hours}:${String(minutes % 60).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+                }
+                return `${minutes}:${String(seconds % 60).padStart(2, '0')}`;
+            },
+
+            // Focus Timer
+            setFocusTimer(minutes) {
+                this.focusTimerSeconds = minutes * 60;
+                this.updateFocusTimerDisplay();
+            },
+
+            toggleFocusTimer() {
+                if (this.focusTimerInterval) {
+                    clearInterval(this.focusTimerInterval);
+                    this.focusTimerInterval = null;
+                    document.getElementById('focusTimerBtn').textContent = 'Resume Focus';
+                } else {
+                    this.focusTimerInterval = setInterval(() => {
+                        this.focusTimerSeconds--;
+                        this.updateFocusTimerDisplay();
+                        
+                        if (this.focusTimerSeconds <= 0) {
+                            clearInterval(this.focusTimerInterval);
+                            this.focusTimerInterval = null;
+                            this.showBanner('Focus Complete!', 'Great work! Log 10 XP?');
+                            document.getElementById('focusTimerBtn').textContent = 'Start Focus';
+                        }
+                    }, 1000);
+                    document.getElementById('focusTimerBtn').textContent = 'Pause Focus';
+                }
+            },
+
+            resetFocusTimer() {
+                if (this.focusTimerInterval) {
+                    clearInterval(this.focusTimerInterval);
+                    this.focusTimerInterval = null;
+                }
+                this.focusTimerSeconds = 25 * 60;
+                this.updateFocusTimerDisplay();
+                document.getElementById('focusTimerBtn').textContent = 'Start Focus';
+            },
+
+            updateFocusTimerDisplay() {
+                const minutes = Math.floor(this.focusTimerSeconds / 60);
+                const seconds = this.focusTimerSeconds % 60;
+                document.getElementById('focusTimerDisplay').textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            },
+
+            // Goals
+            toggleGoalItem(goalId, itemId) {
+                const goal = this.gameData.goals.find(g => g.id === goalId);
+                if (!goal || !goal.items) return;
+
+                const item = goal.items.find(i => i.id === itemId);
+                if (!item) return;
+
+                if (item.status === 'completed') {
+                    // If already completed, open edit modal
+                    this.editGoalItem(goalId, itemId);
+                } else {
+                    // Mark as completed
+                    item.status = 'completed';
+                    item.completed_at = new Date().toISOString();
+                    this.addLog('goal_item_completed', `${goal.name}: ${item.name}`);
+                    this.saveData();
+                    this.render();
+                }
+            },
+
+            editGoalItem(goalId, itemId) {
+                this.currentGoalEdit = { goalId, itemId };
+                
+                const goal = this.gameData.goals.find(g => g.id === goalId);
+                const item = goal.items.find(i => i.id === itemId);
+
+                document.getElementById('editGoalStatus').value = item.status || 'todo';
+                document.getElementById('editGoalNote').value = item.note || '';
+
+                this.openModal('editGoalModal');
+            },
+
+            saveGoalEdit() {
+                if (!this.currentGoalEdit) return;
+
+                const { goalId, itemId } = this.currentGoalEdit;
+                const goal = this.gameData.goals.find(g => g.id === goalId);
+                const item = goal.items.find(i => i.id === itemId);
+
+                const newStatus = document.getElementById('editGoalStatus').value;
+                const newNote = document.getElementById('editGoalNote').value;
+
+                item.status = newStatus;
+                item.note = newNote;
+
+                if (newStatus === 'completed' && !item.completed_at) {
+                    item.completed_at = new Date().toISOString();
+                } else if (newStatus === 'todo') {
+                    delete item.completed_at;
+                }
+
+                this.addLog('goal_item_edited', `${goal.name}: ${item.name} updated`);
+                this.closeModal('editGoalModal');
+                this.saveData();
+                this.render();
+            },
+
+            resetGoalItem() {
+                if (!this.currentGoalEdit) return;
+                if (!confirm('Reset to To Do?')) return;
+
+                const { goalId, itemId } = this.currentGoalEdit;
+                const goal = this.gameData.goals.find(g => g.id === goalId);
+                const item = goal.items.find(i => i.id === itemId);
+
+                item.status = 'todo';
+                delete item.completed_at;
+                delete item.note;
+
+                this.addLog('goal_item_reset', `${goal.name}: ${item.name} reset`);
+                this.closeModal('editGoalModal');
+                this.saveData();
+                this.render();
+            },
+
+            incrementCounter(goalId) {
+                this.currentCounterEdit = goalId;
+                const goal = this.gameData.goals.find(g => g.id === goalId);
+                
+                document.getElementById('counterModalTitle').textContent = goal.name;
+                document.getElementById('counterModalPrompt').textContent = 
+                    goalId === 'GOAL-CLIENTS' ? 'Who? What service? Value?' :
+                    goalId === 'GOAL-AUDITS' ? 'Which client? What was delivered?' :
+                    'Details';
+                
+                this.openModal('counterModal');
+            },
+
+            confirmIncrementCounter() {
+                const note = document.getElementById('counterNote').value;
+                
+                if (!note.trim()) {
+                    alert('Please add details');
+                    return;
+                }
+
+                const goal = this.gameData.goals.find(g => g.id === this.currentCounterEdit);
+                if (!goal) return;
+
+                goal.value++;
+                this.addLog('counter_incremented', `${goal.name}: +1`, { note });
+
+                document.getElementById('counterNote').value = '';
+                this.closeModal('counterModal');
+                this.saveData();
+                this.render();
+            },
+
+            // Weekly Review
+            showWeeklyReview() {
+                this.openModal('weeklyReviewModal');
+            },
+
+            saveWeeklyReview() {
+                const review = {
+                    date: new Date().toISOString(),
+                    q1: document.getElementById('reviewQ1').value,
+                    q2: document.getElementById('reviewQ2').value,
+                    q3: document.getElementById('reviewQ3').value,
+                    q4: document.getElementById('reviewQ4').value
+                };
+
+                this.gameData.weeklyReviews.unshift(review);
+                if (this.gameData.weeklyReviews.length > 12) {
+                    this.gameData.weeklyReviews = this.gameData.weeklyReviews.slice(0, 12);
+                }
+
+                this.addLog('weekly_review', 'Weekly review saved');
+                this.closeModal('weeklyReviewModal');
+                this.saveData();
+                
+                // Clear form
+                document.getElementById('reviewQ1').value = '';
+                document.getElementById('reviewQ2').value = '';
+                document.getElementById('reviewQ3').value = '';
+                document.getElementById('reviewQ4').value = '';
+
+                this.showBanner('Review Saved', 'Weekly review has been saved');
+            },
+
+            // Modal Management
+            openModal(modalId) {
+                document.getElementById(modalId).classList.add('active');
+            },
+
+            closeModal(modalId) {
+                document.getElementById(modalId).classList.remove('active');
+            },
+
+            // Banner
+            showBanner(title, message, type = 'info') {
+                const banner = document.getElementById('banner');
+                document.getElementById('bannerTitle').textContent = title;
+                document.getElementById('bannerMessage').textContent = message;
+                
+                if (type === 'warning') {
+                    banner.classList.add('warning');
+                } else {
+                    banner.classList.remove('warning');
+                }
+                
+                banner.classList.add('show');
+                
+                setTimeout(() => {
+                    this.hideBanner();
+                }, 5000);
+            },
+
+            hideBanner() {
+                document.getElementById('banner').classList.remove('show');
+            },
+
+            // Screens
+            showLogsScreen() {
+                document.getElementById('dashboardGrid').classList.add('hidden');
+                document.getElementById('settingsScreen').classList.add('hidden');
+                document.getElementById('logsScreen').classList.remove('hidden');
+                this.currentLogFilter = 'all';
+                this.renderLogsScreen();
+            },
+
+            showSettingsScreen() {
+                document.getElementById('dashboardGrid').classList.add('hidden');
+                document.getElementById('logsScreen').classList.add('hidden');
+                document.getElementById('settingsScreen').classList.remove('hidden');
+                this.renderSettingsScreen();
+            },
+
+            showDashboard() {
+                document.getElementById('logsScreen').classList.add('hidden');
+                document.getElementById('settingsScreen').classList.add('hidden');
+                document.getElementById('dashboardGrid').classList.remove('hidden');
+                this.render();
+            },
+
+            filterLogs(type) {
+                this.currentLogFilter = type;
+                this.renderLogsScreen();
+            },
+
+            renderLogsScreen() {
+                const tbody = document.getElementById('logsTableBody');
+                
+                // Update filter buttons
+                document.querySelectorAll('#logsScreen .btn-small').forEach(btn => {
+                    btn.classList.remove('btn-primary');
+                });
+                
+                const logs = this.currentLogFilter === 'all' 
+                    ? this.gameData.logs 
+                    : this.gameData.logs.filter(l => l.type === this.currentLogFilter);
+
+                if (logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: var(--spacing-xl);">No logs found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = logs.map(log => {
+                    const date = new Date(log.timestamp);
+                    const timeStr = date.toLocaleString('hu-HU', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+
+                    let typeClass = 'log-type-quest';
+                    let typeLabel = 'Quest';
+                    
+                    if (log.type.includes('goal')) {
+                        typeClass = 'log-type-goal';
+                        typeLabel = 'Goal';
+                    } else if (log.type.includes('reward') || log.type.includes('level')) {
+                        typeClass = 'log-type-reward';
+                        typeLabel = 'Reward';
+                    }
+
+                    const details = log.data.note || log.data.outcome || JSON.stringify(log.data);
+
+                    return `
+                        <tr>
+                            <td style="white-space: nowrap;">${timeStr}</td>
+                            <td><span class="log-type ${typeClass}">${typeLabel}</span></td>
+                            <td style="font-weight: 500;">${log.message}</td>
+                            <td style="color: var(--text-secondary); font-size: 0.85rem;">${details.substring(0, 50)}${details.length > 50 ? '...' : ''}</td>
+                        </tr>
+                    `;
+                }).join('');
+            },
+
+            renderSettingsScreen() {
+                // Quest Types
+                const questTypesDiv = document.getElementById('questTypesSettings');
+                questTypesDiv.innerHTML = this.gameData.questTypes.map(qt => `
+                    <div class="settings-item">
+                        <span class="settings-label">${qt.name} Quest</span>
+                        <input type="number" value="${qt.xp}" 
+                               onchange="app.updateQuestTypeXP('${qt.id}', this.value)"
+                               class="form-input" style="width: 100px;">
+                        <span style="margin-left: 0.5rem; color: var(--text-secondary);">XP</span>
+                    </div>
+                `).join('');
+
+                // Daily XP Target
+                document.getElementById('dailyXPTarget').value = this.gameData.streak.daily_min_xp;
+
+                // Quest Templates
+                const templatesDiv = document.getElementById('questTemplatesSettings');
+                templatesDiv.innerHTML = this.gameData.questTemplates.map(tpl => {
+                    const questType = this.gameData.questTypes.find(qt => qt.id === tpl.quest_type_id);
+                    return `
+                        <div class="settings-item">
+                            <div>
+                                <div style="font-weight: 500;">${tpl.title}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                                    ${questType.name} • ${tpl.skill_tree_id.replace('SKILL-', '')} • ${tpl.xp} XP
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: var(--spacing-xs);">
+                                <button class="btn btn-small" onclick="app.createQuestFromTemplate('${tpl.id}')">Use</button>
+                                <button class="btn btn-small btn-danger" onclick="app.deleteTemplate('${tpl.id}')">×</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Weekly Reviews History
+                const reviewsDiv = document.getElementById('reviewsHistory');
+                if (this.gameData.weeklyReviews.length === 0) {
+                    reviewsDiv.innerHTML = '<div style="color: var(--text-muted); padding: var(--spacing-md);">No reviews yet</div>';
+                } else {
+                    reviewsDiv.innerHTML = this.gameData.weeklyReviews.slice(0, 5).map(review => {
+                        const date = new Date(review.date);
+                        const dateStr = date.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', year: 'numeric' });
+                        return `
+                            <div style="padding: var(--spacing-md); border: 1px solid var(--border-light); border-radius: 6px; margin-bottom: var(--spacing-sm);">
+                                <div style="font-weight: 600; margin-bottom: var(--spacing-xs);">${dateStr}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                                    ${review.q2 ? review.q2.substring(0, 100) + '...' : 'No details'}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // Goals Management
+                const goalsDiv = document.getElementById('goalsManagement');
+                goalsDiv.innerHTML = this.gameData.goals.map(goal => {
+                    const progress = goal.type === 'counter' 
+                        ? `${goal.value}/${goal.target}`
+                        : goal.items 
+                            ? `${goal.items.filter(i => i.status === 'completed').length}/${goal.items.length}`
+                            : '0/0';
+                    
+                    return `
+                        <div class="settings-item">
+                            <div>
+                                <div style="font-weight: 600;">${goal.name}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                                    ${goal.type === 'counter' ? 'Counter' : 'Checklist'} • Progress: ${progress}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: var(--spacing-xs);">
+                                ${goal.type === 'checklist' ? `
+                                    <button class="btn btn-small" onclick="app.showAddGoalItemModal('${goal.id}')">+ Item</button>
+                                ` : ''}
+                                <button class="btn btn-small" onclick="app.editGoal('${goal.id}')">Edit</button>
+                                <button class="btn btn-small btn-danger" onclick="app.deleteGoal('${goal.id}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Claimed Rewards
+                const rewardsDiv = document.getElementById('rewardsHistory');
+                if (this.gameData.rewards.claimed.length === 0) {
+                    rewardsDiv.innerHTML = '<div style="color: var(--text-muted); padding: var(--spacing-md);">No rewards claimed yet</div>';
+                } else {
+                    rewardsDiv.innerHTML = this.gameData.rewards.claimed.map(reward => {
+                        const date = new Date(reward.claimed_at);
+                        const dateStr = date.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' });
+                        return `
+                            <div style="padding: var(--spacing-md); border: 1px solid var(--border-light); border-radius: 6px; margin-bottom: var(--spacing-sm);">
+                                <div style="font-weight: 600;">${reward.title}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">${dateStr} • ${reward.description}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // Archived Goals (if any)
+                if (this.gameData.archivedGoals && this.gameData.archivedGoals.length > 0) {
+                    const archivedSection = `
+                        <div class="settings-section">
+                            <div class="settings-title">Archived Goals (Completed Phases)</div>
+                            ${this.gameData.archivedGoals.map(archive => {
+                                const date = new Date(archive.completed_at);
+                                const dateStr = date.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', year: 'numeric' });
+                                return `
+                                    <div style="padding: var(--spacing-md); border: 1px solid var(--accent-primary); border-radius: 6px; margin-bottom: var(--spacing-md); background: rgba(0, 255, 136, 0.05);">
+                                        <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: var(--spacing-sm);">
+                                            🏆 ${archive.phase}
+                                        </div>
+                                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--spacing-sm);">
+                                            Completed: ${dateStr}
+                                        </div>
+                                        <div style="font-size: 0.9rem;">
+                                            ${archive.goals.map(g => `• ${g.name}`).join('<br>')}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                    
+                    // Insert after rewards section
+                    document.getElementById('rewardsHistory').parentElement.insertAdjacentHTML('afterend', archivedSection);
+                }
+            },
+
+            updateQuestTypeXP(typeId, newXP) {
+                const questType = this.gameData.questTypes.find(qt => qt.id === typeId);
+                if (questType) {
+                    questType.xp = parseInt(newXP);
+                    this.saveData();
+                    this.showBanner('Updated', `${questType.name} Quest XP updated to ${newXP}`);
+                }
+            },
+
+            saveDailyXPTarget() {
+                const newTarget = parseInt(document.getElementById('dailyXPTarget').value);
+                this.gameData.streak.daily_min_xp = newTarget;
+                this.saveData();
+                this.render();
+                this.showBanner('Updated', `Daily XP target set to ${newTarget}`);
+            },
+
+            // Template Management
+            showAddTemplateModal() {
+                this.openModal('addTemplateModal');
+            },
+
+            saveTemplate() {
+                const title = document.getElementById('templateTitle').value;
+                const typeId = document.getElementById('templateType').value;
+                const skillId = document.getElementById('templateSkill').value;
+                const customXP = document.getElementById('templateXP').value;
+
+                if (!title.trim()) {
+                    alert('Please enter a template title');
+                    return;
+                }
+
+                const questType = this.gameData.questTypes.find(qt => qt.id === typeId);
+                const xp = customXP ? parseInt(customXP) : questType.xp;
+
+                const newTemplate = {
+                    id: 'TPL-' + Date.now(),
+                    title,
+                    quest_type_id: typeId,
+                    skill_tree_id: skillId,
+                    xp
+                };
+
+                this.gameData.questTemplates.push(newTemplate);
+                this.saveData();
+
+                document.getElementById('templateTitle').value = '';
+                document.getElementById('templateXP').value = '';
+
+                this.closeModal('addTemplateModal');
+                this.renderSettingsScreen();
+                this.showBanner('Template Added', title);
+            },
+
+            createQuestFromTemplate(templateId) {
+                const template = this.gameData.questTemplates.find(t => t.id === templateId);
+                if (!template) return;
+
+                const newQuest = {
+                    id: 'Q-' + Date.now(),
+                    title: template.title,
+                    quest_type_id: template.quest_type_id,
+                    skill_tree_id: template.skill_tree_id,
+                    lane: 'backlog',
+                    xp: template.xp
+                };
+
+                this.gameData.activeQuests.push(newQuest);
+                this.addLog('quest_created', `Created from template: ${template.title}`);
+                this.saveData();
+                
+                this.showDashboard();
+                this.showBanner('Quest Added', template.title);
+            },
+
+            deleteTemplate(templateId) {
+                if (!confirm('Delete this template?')) return;
+                
+                this.gameData.questTemplates = this.gameData.questTemplates.filter(t => t.id !== templateId);
+                this.saveData();
+                this.renderSettingsScreen();
+            },
+
+            showTemplatesModal() {
+                const list = document.getElementById('templatesList');
+                
+                if (this.gameData.questTemplates.length === 0) {
+                    list.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: var(--spacing-xl);">No templates available. Add one in Settings!</div>';
+                } else {
+                    list.innerHTML = this.gameData.questTemplates.map(tpl => {
+                        const questType = this.gameData.questTypes.find(qt => qt.id === tpl.quest_type_id);
+                        const typeClass = tpl.quest_type_id === 'QT-DAILY' ? 'daily' :
+                                         tpl.quest_type_id === 'QT-SIDE' ? 'side' : 'boss';
+                        
+                        return `
+                            <div style="padding: var(--spacing-md); border: 1px solid var(--border-light); border-radius: 6px; margin-bottom: var(--spacing-sm); display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 500; margin-bottom: 0.25rem;">${tpl.title}</div>
+                                    <div style="display: flex; gap: var(--spacing-sm); align-items: center;">
+                                        <span class="quest-type-badge badge-${typeClass}">${questType.name}</span>
+                                        <span style="font-size: 0.85rem; color: var(--text-secondary);">${tpl.skill_tree_id.replace('SKILL-', '')}</span>
+                                        <span style="font-size: 0.85rem; color: var(--accent-primary); font-weight: 600;">+${tpl.xp} XP</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary btn-small" onclick="app.createQuestFromTemplate('${tpl.id}'); app.closeModal('templatesModal')">Use</button>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+                this.openModal('templatesModal');
+            },
+
+            // Goal Management
+            showAddGoalModal() {
+                document.getElementById('newGoalName').value = '';
+                document.getElementById('newGoalType').value = 'checklist';
+                document.getElementById('counterTargetGroup').style.display = 'none';
+                this.openModal('addGoalModal');
+            },
+
+            toggleGoalTypeFields() {
+                const type = document.getElementById('newGoalType').value;
+                const counterGroup = document.getElementById('counterTargetGroup');
+                counterGroup.style.display = type === 'counter' ? 'block' : 'none';
+            },
+
+            saveNewGoal() {
+                const name = document.getElementById('newGoalName').value;
+                const type = document.getElementById('newGoalType').value;
+                const target = document.getElementById('newGoalTarget').value;
+
+                if (!name.trim()) {
+                    alert('Please enter a goal name');
+                    return;
+                }
+
+                if (type === 'counter' && !target) {
+                    alert('Please enter a target value for counter goals');
+                    return;
+                }
+
+                const newGoal = {
+                    id: 'GOAL-' + Date.now(),
+                    name,
+                    type
+                };
+
+                if (type === 'counter') {
+                    newGoal.value = 0;
+                    newGoal.target = parseInt(target);
+                } else {
+                    newGoal.items = [];
+                }
+
+                this.gameData.goals.push(newGoal);
+                this.addLog('goal_created', `New goal: ${name}`);
+                this.saveData();
+
+                this.closeModal('addGoalModal');
+                this.renderSettingsScreen();
+                this.render();
+                this.showBanner('Goal Added', name);
+            },
+
+            editGoal(goalId) {
+                const goal = this.gameData.goals.find(g => g.id === goalId);
+                if (!goal) return;
+
+                const newName = prompt('Goal name:', goal.name);
+                if (!newName || !newName.trim()) return;
+
+                goal.name = newName.trim();
+
+                if (goal.type === 'counter') {
+                    const newTarget = prompt('Target value:', goal.target);
+                    if (newTarget && !isNaN(newTarget)) {
+                        goal.target = parseInt(newTarget);
+                    }
+                }
+
+                this.addLog('goal_edited', `Goal updated: ${goal.name}`);
+                this.saveData();
+                this.renderSettingsScreen();
+                this.render();
+            },
+
+            deleteGoal(goalId) {
+                const goal = this.gameData.goals.find(g => g.id === goalId);
+                if (!goal) return;
+
+                if (!confirm(`Delete goal "${goal.name}"?`)) return;
+
+                this.gameData.goals = this.gameData.goals.filter(g => g.id !== goalId);
+                this.addLog('goal_deleted', `Goal deleted: ${goal.name}`);
+                this.saveData();
+                this.renderSettingsScreen();
+                this.render();
+                this.showBanner('Goal Deleted', goal.name);
+            },
+
+            showAddGoalItemModal(goalId) {
+                this.currentGoalEdit = { goalId };
+                document.getElementById('newGoalItemName').value = '';
+                this.openModal('addGoalItemModal');
+            },
+
+            saveNewGoalItem() {
+                if (!this.currentGoalEdit) return;
+
+                const name = document.getElementById('newGoalItemName').value;
+                if (!name.trim()) {
+                    alert('Please enter an item name');
+                    return;
+                }
+
+                const goal = this.gameData.goals.find(g => g.id === this.currentGoalEdit.goalId);
+                if (!goal || !goal.items) return;
+
+                const newItem = {
+                    id: 'ITEM-' + Date.now(),
+                    name: name.trim(),
+                    status: 'todo'
+                };
+
+                goal.items.push(newItem);
+                this.addLog('goal_item_added', `${goal.name}: ${newItem.name}`);
+                this.saveData();
+
+                this.closeModal('addGoalItemModal');
+                this.renderSettingsScreen();
+                this.render();
+            },
+
+            // Phase Completion Check
+            checkPhaseCompletion() {
+                const pagesGoal = this.gameData.goals.find(g => g.id === 'GOAL-PAGES');
+                const clientsGoal = this.gameData.goals.find(g => g.id === 'GOAL-CLIENTS');
+                const auditsGoal = this.gameData.goals.find(g => g.id === 'GOAL-AUDITS');
+
+                if (!pagesGoal || !clientsGoal || !auditsGoal) return false;
+
+                const pagesComplete = pagesGoal.items && pagesGoal.items.filter(i => i.status === 'completed').length >= 3;
+                const clientsComplete = clientsGoal.value >= 3;
+                const auditsComplete = auditsGoal.value >= 2;
+
+                const allComplete = pagesComplete && clientsComplete && auditsComplete;
+
+                // Check if this is the first time completing
+                if (allComplete && !this.gameData.phaseCompleted) {
+                    this.gameData.phaseCompleted = true;
+                    this.gameData.phaseCompletedAt = new Date().toISOString();
+                    this.addLog('phase_completed', 'FOUNDATION → CASHFLOW phase complete!');
+                    this.saveData();
+                    
+                    // Show celebration modal
+                    setTimeout(() => {
+                        this.openModal('phaseCompleteModal');
+                    }, 1000);
+                }
+
+                return allComplete;
+            },
+
+            // Goal Management
+            showAddGoalModal() {
+                // Setup goal type change listener
+                document.getElementById('newGoalType').onchange = (e) => {
+                    if (e.target.value === 'counter') {
+                        document.getElementById('counterTargetGroup').style.display = 'block';
+                        document.getElementById('checklistItemsGroup').style.display = 'none';
+                    } else {
+                        document.getElementById('counterTargetGroup').style.display = 'none';
+                        document.getElementById('checklistItemsGroup').style.display = 'block';
+                    }
+                };
+                
+                this.openModal('addGoalModal');
+            },
+
+            saveNewGoal() {
+                const name = document.getElementById('newGoalName').value;
+                const type = document.getElementById('newGoalType').value;
+
+                if (!name.trim()) {
+                    alert('Please enter a goal name');
+                    return;
+                }
+
+                const newGoal = {
+                    id: 'GOAL-' + Date.now(),
+                    name,
+                    type
+                };
+
+                if (type === 'counter') {
+                    const target = parseInt(document.getElementById('newGoalTarget').value);
+                    if (!target || target <= 0) {
+                        alert('Please enter a valid target value');
+                        return;
+                    }
+                    newGoal.value = 0;
+                    newGoal.target = target;
+                } else {
+                    const itemsText = document.getElementById('newGoalItems').value;
+                    const items = itemsText.split('\n').filter(line => line.trim());
+                    
+                    if (items.length === 0) {
+                        alert('Please enter at least one checklist item');
+                        return;
+                    }
+                    
+                    newGoal.items = items.map((item, idx) => ({
+                        id: `ITEM-${Date.now()}-${idx}`,
+                        name: item.trim(),
+                        status: 'todo'
+                    }));
+                }
+
+                this.gameData.goals.push(newGoal);
+                this.addLog('goal_created', `New goal: ${name}`);
+                this.saveData();
+
+                // Clear form
+                document.getElementById('newGoalName').value = '';
+                document.getElementById('newGoalTarget').value = '';
+                document.getElementById('newGoalItems').value = '';
+
+                this.closeModal('addGoalModal');
+                this.renderSettingsScreen();
+                this.render();
+                this.showBanner('Goal Added', name);
+            },
+
+            editGoal(goalId) {
+                // For now, just allow deletion or show details
+                const goal = this.gameData.goals.find(g => g.id === goalId);
+                if (!goal) return;
+                
+                alert(`Goal: ${goal.name}\n\nTo edit individual items, go to the Goals panel on the dashboard.\n\nFull goal editing coming soon!`);
+            },
+
+            deleteGoal(goalId) {
+                const goal = this.gameData.goals.find(g => g.id === goalId);
+                if (!goal) return;
+
+                if (!confirm(`Delete goal "${goal.name}"? This cannot be undone.`)) return;
+
+                this.gameData.goals = this.gameData.goals.filter(g => g.id !== goalId);
+                this.addLog('goal_deleted', `Deleted goal: ${goal.name}`);
+                this.saveData();
+                this.renderSettingsScreen();
+                this.render();
+                this.showBanner('Goal Deleted', goal.name);
+            },
+
+            // Phase Completion Check
+            checkPhaseCompletion() {
+                // Check win conditions
+                const pagesGoal = this.gameData.goals.find(g => g.id === 'GOAL-PAGES');
+                const clientsGoal = this.gameData.goals.find(g => g.id === 'GOAL-CLIENTS');
+                const auditsGoal = this.gameData.goals.find(g => g.id === 'GOAL-AUDITS');
+
+                if (!pagesGoal || !clientsGoal || !auditsGoal) return;
+
+                const pagesCompleted = pagesGoal.items ? pagesGoal.items.filter(i => i.status === 'completed').length : 0;
+                const clientsCount = clientsGoal.value || 0;
+                const auditsCount = auditsGoal.value || 0;
+
+                const allConditionsMet = pagesCompleted >= 3 && clientsCount >= 3 && auditsCount >= 2;
+
+                // Check if we already showed the completion modal
+                if (allConditionsMet && !this.gameData.phaseCompleted) {
+                    this.gameData.phaseCompleted = true;
+                    this.saveData();
+                    
+                    // Show completion modal
+                    setTimeout(() => {
+                        this.openModal('phaseCompleteModal');
+                    }, 1000);
+                }
+            },
+
+            startNewPhase() {
+                this.closeModal('phaseCompleteModal');
+                
+                const proceed = confirm('Start a new phase?\n\nThis will:\n• Keep your XP and level\n• Archive current goals\n• Allow you to set new goals\n\nContinue?');
+                
+                if (!proceed) return;
+
+                // Archive current goals
+                if (!this.gameData.archivedGoals) {
+                    this.gameData.archivedGoals = [];
+                }
+                
+                this.gameData.archivedGoals.push({
+                    phase: 'FOUNDATION → CASHFLOW',
+                    completed_at: new Date().toISOString(),
+                    goals: [...this.gameData.goals]
+                });
+
+                // Clear current goals
+                this.gameData.goals = [];
+                this.gameData.phaseCompleted = false;
+
+                this.addLog('phase_completed', 'FOUNDATION → CASHFLOW phase completed!');
+                this.saveData();
+                
+                this.showBanner('New Phase Started', 'Set your new goals in Settings!');
+                this.showSettingsScreen();
+            },
+
+            // Export/Import
+            exportData() {
+                const dataStr = JSON.stringify(this.gameData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `verifico-backup-${this.getTodayKey()}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+                
+                this.showBanner('Exported', 'Data exported successfully');
+            },
+
+            importData() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'application/json';
+                
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        try {
+                            const imported = JSON.parse(event.target.result);
+                            if (confirm('This will overwrite all current data. Continue?')) {
+                                this.gameData = imported;
+                                this.ensureDataStructure();
+                                this.saveData();
+                                this.showDashboard();
+                                this.showBanner('Imported', 'Data imported successfully');
+                            }
+                        } catch (err) {
+                            alert('Import error: ' + err.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                
+                input.click();
+            },
+
+            // Reward System
+            showReward(reward) {
+                this.currentReward = reward;
+                
+                let icon = '🎁';
+                if (reward.type === 'level_up') icon = '🎉';
+                if (reward.type === 'boss_fight') icon = '👑';
+                if (reward.type === 'xp_milestone') icon = '🎯';
+
+                document.getElementById('rewardIcon').textContent = icon;
+                document.getElementById('rewardTitle').textContent = reward.title;
+                document.getElementById('rewardDescription').textContent = reward.description;
+                
+                this.openModal('rewardModal');
+            },
+
+            claimReward() {
+                if (!this.currentReward) return;
+
+                this.gameData.rewards.claimed.push({
+                    ...this.currentReward,
+                    claimed_at: new Date().toISOString()
+                });
+
+                this.addLog('reward_claimed', this.currentReward.title, this.currentReward);
+
+                this.closeModal('rewardModal');
+                this.currentReward = null;
+                this.saveData();
+                
+                this.showBanner('Reward Claimed!', 'Great job!');
+            },
+
+            // Render
+            render() {
+                this.renderTopNav();
+                this.renderWorkBoard();
+                this.renderCockpit();
+                this.renderGoals();
+                this.checkDailyXPWarning();
+                this.checkPhaseCompletion();
+            },
+
+            renderTopNav() {
+                document.getElementById('streakValue').textContent = this.gameData.currentStreak;
+                document.getElementById('todayXPValue').textContent = this.getTodayXP();
+            },
+
+            renderWorkBoard() {
+                ['today', 'week', 'backlog'].forEach(lane => {
+                    const quests = this.gameData.activeQuests.filter(q => q.lane === lane);
+                    const container = document.getElementById(lane + 'Lane');
+                    const count = document.getElementById(lane + 'Count');
+                    
+                    count.textContent = quests.length;
+
+                    if (quests.length === 0) {
+                        container.innerHTML = '<div class="empty">Drop quests here</div>';
+                        container.classList.add('empty');
+                    } else {
+                        container.classList.remove('empty');
+                        container.innerHTML = quests.map(q => this.renderQuestCard(q)).join('');
+                    }
+                });
+            },
+
+            renderQuestCard(quest) {
+                const questType = this.gameData.questTypes.find(qt => qt.id === quest.quest_type_id);
+                const typeClass = quest.quest_type_id === 'QT-DAILY' ? 'daily' :
+                                 quest.quest_type_id === 'QT-SIDE' ? 'side' : 'boss';
+                
+                const hasTimer = this.questTimers[quest.id];
+                const isRunning = hasTimer && this.questTimers[quest.id].startTime;
+                const elapsed = this.getQuestElapsedTime(quest.id);
+
+                const skillName = quest.skill_tree_id ? quest.skill_tree_id.replace('SKILL-', '') : '';
+
+                return `
+                    <div class="quest-card" draggable="true" data-quest-id="${quest.id}">
+                        <div class="quest-header">
+                            <div class="quest-title">${quest.title}</div>
+                            <div class="quest-type-badge badge-${typeClass}">${questType.name}</div>
+                        </div>
+                        <div class="quest-meta">
+                            <span class="quest-skill">${skillName}</span>
+                            <span class="quest-xp">+${quest.xp} XP</span>
+                            ${hasTimer ? `
+                                <span class="quest-timer ${isRunning ? 'running' : ''}" data-quest-id="${quest.id}">
+                                    <span class="timer-value">${this.formatTime(elapsed)}</span>
+                                </span>
+                            ` : ''}
+                        </div>
+                        <div class="quest-controls">
+                            <button class="btn btn-small" onclick="app.toggleQuestTimer('${quest.id}')">
+                                ${isRunning ? '⏸' : '▶'}
+                            </button>
+                            <button class="btn btn-small btn-primary" onclick="app.completeQuest('${quest.id}')">✓</button>
+                            <button class="btn btn-small btn-danger" onclick="app.deleteQuest('${quest.id}')">×</button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderCockpit() {
+                // Win Conditions
+                const pagesGoal = this.gameData.goals.find(g => g.id === 'GOAL-PAGES');
+                const clientsGoal = this.gameData.goals.find(g => g.id === 'GOAL-CLIENTS');
+                const auditsGoal = this.gameData.goals.find(g => g.id === 'GOAL-AUDITS');
+
+                const pagesCompleted = pagesGoal && pagesGoal.items ? pagesGoal.items.filter(i => i.status === 'completed').length : 0;
+                const clientsValue = clientsGoal ? clientsGoal.value : 0;
+                const auditsValue = auditsGoal ? auditsGoal.value : 0;
+
+                const winConditions = [
+                    { label: '3 pages published', completed: pagesCompleted >= 3, progress: `${pagesCompleted}/3` },
+                    { label: 'Paid clients ≥ 3', completed: clientsValue >= 3, progress: `${clientsValue}/3` },
+                    { label: 'Closed audits ≥ 2', completed: auditsValue >= 2, progress: `${auditsValue}/2` }
+                ];
+
+                const allComplete = winConditions.every(wc => wc.completed);
+
+                let winConditionsHTML = winConditions.map(wc => `
+                    <div class="win-condition">
+                        <div class="win-checkbox ${wc.completed ? 'completed' : ''}"></div>
+                        <div class="win-label">${wc.label}</div>
+                        <div class="win-progress">${wc.progress}</div>
+                    </div>
+                `).join('');
+
+                if (allComplete) {
+                    winConditionsHTML += `
+                        <div style="margin-top: var(--spacing-md); padding: var(--spacing-md); background: rgba(0, 255, 136, 0.1); border: 1px solid var(--accent-primary); border-radius: 6px; text-align: center;">
+                            <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.25rem;">🏆 Phase Complete!</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">All win conditions met</div>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('winConditionsList').innerHTML = winConditionsHTML;
+            },
+
+            renderGoals() {
+                const container = document.getElementById('goalsContent');
+                
+                container.innerHTML = this.gameData.goals.map(goal => {
+                    if (goal.type === 'checklist') {
+                        const completed = goal.items.filter(i => i.status === 'completed').length;
+                        return `
+                            <div class="goal-card">
+                                <div class="goal-header">
+                                    <div class="goal-title">${goal.name}</div>
+                                    <div class="goal-progress">${completed}/${goal.items.length}</div>
+                                </div>
+                                ${goal.items.map(item => `
+                                    <div class="goal-item ${item.status === 'completed' ? 'completed' : ''}">
+                                        <div class="goal-checkbox ${item.status === 'completed' ? 'completed' : ''}" 
+                                             onclick="app.toggleGoalItem('${goal.id}', '${item.id}')"></div>
+                                        <div class="goal-item-label">${item.name}</div>
+                                        <button class="btn btn-small goal-item-edit" onclick="app.editGoalItem('${goal.id}', '${item.id}')">✏️</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else {
+                        return `
+                            <div class="goal-card">
+                                <div class="goal-header">
+                                    <div class="goal-title">${goal.name}</div>
+                                    <div class="goal-progress">${goal.value}/${goal.target}</div>
+                                </div>
+                                <div class="counter-display">
+                                    <div class="counter-value">${goal.value}</div>
+                                    <div class="counter-controls">
+                                        <button class="btn btn-primary" onclick="app.incrementCounter('${goal.id}')">+1</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }).join('');
+            },
+
+            checkDailyXPWarning() {
+                const todayXP = this.getTodayXP();
+                const target = this.gameData.streak.daily_min_xp;
+                
+                if (todayXP < target) {
+                    const remaining = target - todayXP;
+                    // Only show warning after 6 PM
+                    const hour = new Date().getHours();
+                    if (hour >= 18) {
+                        this.showBanner('XP Warning', `You need ${remaining} more XP to maintain your streak`, 'warning');
+                    }
+                }
+            },
+
+            // Data Management
+            resetData() {
+                if (!confirm('WARNING: This will delete all data! Continue?')) return;
+                if (!confirm('Last chance: Really delete EVERYTHING?')) return;
+
+                localStorage.removeItem('verificoGameV2');
+                localStorage.removeItem('verificoTimersV2');
+                sessionStorage.removeItem('verificoStarted');
+                location.reload();
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+    </script>
+</body>
+</html>
