@@ -116,6 +116,16 @@
             border-radius: 4px;
         }
 
+        .phase-label #phaseNumber {
+            color: var(--accent-primary);
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .phase-label #phaseName {
+            color: var(--text-primary);
+        }
+
         /* Streak Indicator */
         .streak-indicator {
             display: flex;
@@ -1050,7 +1060,7 @@
         <nav class="top-nav">
             <div class="nav-left">
                 <div class="app-name">Verifico Game</div>
-                <div class="phase-label">Phase: FOUNDATION → CASHFLOW</div>
+                <div class="phase-label">Phase <span id="phaseNumber">1</span>: <span id="phaseName">FOUNDATION → CASHFLOW</span></div>
             </div>
             <div class="nav-center">
                 <div class="streak-indicator">
@@ -1198,9 +1208,12 @@
                 </div>
 
                 <div class="settings-section">
-                    <div class="settings-title">Goals Management</div>
-                    <div id="goalsManagement"></div>
-                    <button class="btn btn-primary mt-md" onclick="app.showAddGoalModal()">+ Add Goal</button>
+                    <div class="settings-title">Phase Win Conditions</div>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--spacing-md); font-size: 0.9rem;">
+                        Define up to 3 conditions to complete the current phase. When all are met, you automatically advance to the next phase.
+                    </p>
+                    <div id="phaseWinConditionsSettings"></div>
+                    <button class="btn btn-primary mt-md" onclick="app.showAddWinConditionModal()">+ Add Win Condition</button>
                 </div>
 
                 <div class="settings-section">
@@ -1211,7 +1224,7 @@
 
                 <div class="settings-section">
                     <div class="settings-title">Goals Management</div>
-                    <div id="goalsManagementSettings"></div>
+                    <div id="goalsManagement"></div>
                     <button class="btn btn-primary mt-md" onclick="app.showAddGoalModal()">+ Add Goal</button>
                 </div>
 
@@ -1222,6 +1235,11 @@
                         <button class="btn" onclick="app.importData()">📤 Import Data (JSON)</button>
                         <button class="btn btn-danger" onclick="app.resetData()">🗑️ Reset All Data</button>
                     </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Weekly Reviews History</div>
+                    <div id="reviewsHistorySettings"></div>
                 </div>
 
                 <div class="settings-section">
@@ -1549,6 +1567,88 @@
         </div>
     </div>
 
+    <!-- Add Win Condition Modal -->
+    <div class="modal" id="addWinConditionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Add Phase Win Condition</div>
+                <button class="modal-close" onclick="app.closeModal('addWinConditionModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Condition Description</label>
+                    <input type="text" class="form-input" id="winConditionText" placeholder="e.g. 3 pages published, 5 clients acquired">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Type</label>
+                    <select class="form-select" id="winConditionType" onchange="app.toggleWinConditionTypeFields()">
+                        <option value="manual">Manual Completion</option>
+                        <option value="counter">Counter (numeric target)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="winConditionTargetGroup" style="display: none;">
+                    <label class="form-label">Target Value</label>
+                    <input type="number" class="form-input" id="winConditionTarget" placeholder="e.g. 3">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="app.closeModal('addWinConditionModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.saveWinCondition()">Add Condition</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Win Condition Modal -->
+    <div class="modal" id="editWinConditionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Edit Phase Win Condition</div>
+                <button class="modal-close" onclick="app.closeModal('editWinConditionModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Condition Description</label>
+                    <input type="text" class="form-input" id="editWinConditionText">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Type</label>
+                    <select class="form-select" id="editWinConditionType" onchange="app.toggleEditWinConditionTypeFields()">
+                        <option value="manual">Manual Completion</option>
+                        <option value="counter">Counter (numeric target)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="editWinConditionTargetGroup" style="display: none;">
+                    <label class="form-label">Target Value</label>
+                    <input type="number" class="form-input" id="editWinConditionTarget">
+                </div>
+                <div class="form-group" id="editWinConditionCurrentGroup" style="display: none;">
+                    <label class="form-label">Current Value</label>
+                    <input type="number" class="form-input" id="editWinConditionCurrent">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="app.closeModal('editWinConditionModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="app.updateWinCondition()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Weekly Review Modal -->
+    <div class="modal" id="viewReviewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">📊 Weekly Review</div>
+                <button class="modal-close" onclick="app.closeModal('viewReviewModal')">×</button>
+            </div>
+            <div class="modal-body" id="viewReviewContent">
+                <!-- Dynamically filled -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="app.closeModal('viewReviewModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Phase Complete Modal -->
     <div class="modal" id="phaseCompleteModal">
         <div class="modal-content">
@@ -1559,24 +1659,20 @@
             <div class="modal-body" style="text-align: center; padding: var(--spacing-xl);">
                 <div style="font-size: 5rem; margin-bottom: var(--spacing-lg);">🏆</div>
                 <div style="font-size: 1.8rem; font-weight: 700; color: var(--accent-primary); margin-bottom: var(--spacing-md);">
-                    FOUNDATION → CASHFLOW Complete!
+                    Current Phase Complete!
                 </div>
-                <div style="color: var(--text-secondary); margin-bottom: var(--spacing-lg); line-height: 1.8;">
-                    Congratulations! You've achieved all win conditions:<br>
-                    ✓ 3 pages published<br>
-                    ✓ 3+ paid clients<br>
-                    ✓ 2+ closed audits
+                <div style="color: var(--text-secondary); margin-bottom: var(--spacing-lg); line-height: 1.8;" id="phaseCompleteList">
+                    <!-- Dynamically filled -->
                 </div>
                 <div style="background: var(--bg-card); padding: var(--spacing-lg); border-radius: 8px; border: 1px solid var(--accent-primary);">
                     <div style="font-weight: 600; margin-bottom: var(--spacing-sm);">What's Next?</div>
                     <div style="color: var(--text-secondary); font-size: 0.95rem;">
-                        This is your foundation. Time to scale, systemize, and build leverage.
-                        Consider setting new goals for the next phase of growth.
+                        You've completed all win conditions. Time to set new goals or continue improving.
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-primary" onclick="app.startNewPhase()">🚀 Start New Phase</button>
+                <button class="btn btn-primary" onclick="app.startNewPhase()">✅ Continue to Phase <span id="nextPhaseNumber"></span></button>
                 <button class="btn" onclick="app.closeModal('phaseCompleteModal')">Continue Current</button>
             </div>
         </div>
@@ -1600,6 +1696,7 @@
             currentGoalEdit: null,
             currentCounterEdit: null,
             currentReward: null,
+            currentWinConditionEdit: null,
             currentLogFilter: 'all',
             draggedQuest: null,
 
@@ -1633,6 +1730,9 @@
                 if (!this.gameData.activeQuests) this.gameData.activeQuests = [];
                 if (this.gameData.phaseCompleted === undefined) this.gameData.phaseCompleted = false;
                 if (!this.gameData.phaseCompletedAt) this.gameData.phaseCompletedAt = null;
+                if (!this.gameData.winConditions) this.gameData.winConditions = [];
+                if (!this.gameData.currentPhase) this.gameData.currentPhase = 1;
+                if (!this.gameData.phaseName) this.gameData.phaseName = 'FOUNDATION → CASHFLOW';
                 if (!this.gameData.questTemplates) {
                     this.gameData.questTemplates = [
                         { id: 'TPL-1', title: 'Oldal: Hero + CTA kész', quest_type_id: 'QT-SIDE', skill_tree_id: 'SKILL-PRODUCTIZATION', xp: 25 },
@@ -1649,6 +1749,8 @@
             initializeDefaultData() {
                 this.gameData = {
                     schema_version: '2.0.0',
+                    currentPhase: 1,
+                    phaseName: 'FOUNDATION → CASHFLOW',
                     totalXP: 0,
                     currentLevel: 1,
                     currentStreak: 0,
@@ -1697,6 +1799,11 @@
                             value: 0,
                             target: 2
                         }
+                    ],
+                    winConditions: [
+                        { id: 'WC-1', text: '3 pages published', type: 'counter', target: 3, current: 0 },
+                        { id: 'WC-2', text: 'Paid clients ≥ 3', type: 'counter', target: 3, current: 0 },
+                        { id: 'WC-3', text: 'Closed audits ≥ 2', type: 'counter', target: 2, current: 0 }
                     ],
                     questTypes: [
                         { id: 'QT-DAILY', name: 'Daily', xp: 10 },
@@ -2399,20 +2506,61 @@
                     `;
                 }).join('');
 
-                // Weekly Reviews History
-                const reviewsDiv = document.getElementById('reviewsHistory');
-                if (this.gameData.weeklyReviews.length === 0) {
-                    reviewsDiv.innerHTML = '<div style="color: var(--text-muted); padding: var(--spacing-md);">No reviews yet</div>';
+                // Phase Win Conditions Settings
+                const phaseWinConditionsDiv = document.getElementById('phaseWinConditionsSettings');
+                if (this.gameData.winConditions.length === 0) {
+                    phaseWinConditionsDiv.innerHTML = '<div style="color: var(--text-muted); padding: var(--spacing-md);">No phase win conditions set. Add conditions to define what completes this phase.</div>';
                 } else {
-                    reviewsDiv.innerHTML = this.gameData.weeklyReviews.slice(0, 5).map(review => {
-                        const date = new Date(review.date);
-                        const dateStr = date.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', year: 'numeric' });
+                    phaseWinConditionsDiv.innerHTML = this.gameData.winConditions.map(wc => {
+                        const isCompleted = wc.type === 'manual' 
+                            ? wc.completed === true 
+                            : wc.current >= wc.target;
+                        
+                        const progressText = wc.type === 'counter' 
+                            ? `${wc.current}/${wc.target}`
+                            : wc.completed ? 'Completed' : 'Not completed';
+                        
                         return `
-                            <div style="padding: var(--spacing-md); border: 1px solid var(--border-light); border-radius: 6px; margin-bottom: var(--spacing-sm);">
-                                <div style="font-weight: 600; margin-bottom: var(--spacing-xs);">${dateStr}</div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary);">
-                                    ${review.q2 ? review.q2.substring(0, 100) + '...' : 'No details'}
+                            <div class="settings-item">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 500; ${isCompleted ? 'color: var(--accent-primary);' : ''}">${wc.text}</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                                        ${wc.type === 'counter' ? 'Counter' : 'Manual'} • ${progressText}
+                                    </div>
                                 </div>
+                                <div style="display: flex; gap: var(--spacing-xs);">
+                                    ${wc.type === 'counter' ? `
+                                        <button class="btn btn-small" onclick="app.incrementWinCondition('${wc.id}')">+1</button>
+                                    ` : `
+                                        <button class="btn btn-small ${isCompleted ? '' : 'btn-primary'}" onclick="app.toggleWinConditionComplete('${wc.id}')">
+                                            ${isCompleted ? 'Undo' : 'Complete'}
+                                        </button>
+                                    `}
+                                    <button class="btn btn-small" onclick="app.editWinConditionModal('${wc.id}')">Edit</button>
+                                    <button class="btn btn-small btn-danger" onclick="app.deleteWinCondition('${wc.id}')">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // Weekly Reviews History
+                const reviewsHistoryDiv = document.getElementById('reviewsHistorySettings');
+                if (this.gameData.weeklyReviews.length === 0) {
+                    reviewsHistoryDiv.innerHTML = '<div style="color: var(--text-muted); padding: var(--spacing-md);">No reviews yet</div>';
+                } else {
+                    reviewsHistoryDiv.innerHTML = this.gameData.weeklyReviews.map((review, index) => {
+                        const date = new Date(review.date);
+                        const dateStr = date.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', year: 'numeric' });
+                        return `
+                            <div class="settings-item" style="cursor: pointer;" onclick="app.viewWeeklyReview(${index})">
+                                <div>
+                                    <div style="font-weight: 600;">${dateStr}</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                                        ${review.q1 ? review.q1.substring(0, 60) + '...' : 'Click to view'}
+                                    </div>
+                                </div>
+                                <button class="btn btn-small">View</button>
                             </div>
                         `;
                     }).join('');
@@ -2509,6 +2657,8 @@
                 this.render();
                 this.showBanner('Updated', `Daily XP target set to ${newTarget}`);
             },
+
+            // (savePhaseSettings removed - phase editing done automatically now)
 
             // Template Management
             showAddTemplateModal() {
@@ -2687,12 +2837,232 @@
 
                 if (!confirm(`Delete goal "${goal.name}"?`)) return;
 
+                // Remove from goals array
                 this.gameData.goals = this.gameData.goals.filter(g => g.id !== goalId);
+                
                 this.addLog('goal_deleted', `Goal deleted: ${goal.name}`);
                 this.saveData();
+                
+                // Re-render both Settings and Dashboard
+                if (document.getElementById('settingsScreen').classList.contains('hidden')) {
+                    this.render();
+                } else {
+                    this.renderSettingsScreen();
+                    this.render(); // Also update cockpit
+                }
+                
+                this.showBanner('Goal Deleted', goal.name);
+            },
+
+            // Phase Win Condition Management
+            showAddWinConditionModal() {
+                document.getElementById('winConditionText').value = '';
+                document.getElementById('winConditionType').value = 'manual';
+                document.getElementById('winConditionTargetGroup').style.display = 'none';
+                this.openModal('addWinConditionModal');
+            },
+
+            toggleWinConditionTypeFields() {
+                const type = document.getElementById('winConditionType').value;
+                document.getElementById('winConditionTargetGroup').style.display = type === 'counter' ? 'block' : 'none';
+            },
+
+            toggleEditWinConditionTypeFields() {
+                const type = document.getElementById('editWinConditionType').value;
+                document.getElementById('editWinConditionTargetGroup').style.display = type === 'counter' ? 'block' : 'none';
+                document.getElementById('editWinConditionCurrentGroup').style.display = type === 'counter' ? 'block' : 'none';
+            },
+
+            saveWinCondition() {
+                const text = document.getElementById('winConditionText').value.trim();
+                const type = document.getElementById('winConditionType').value;
+                const target = type === 'counter' ? parseInt(document.getElementById('winConditionTarget').value) : null;
+
+                if (!text) {
+                    alert('Please enter a condition description');
+                    return;
+                }
+
+                if (type === 'counter' && (!target || target <= 0)) {
+                    alert('Please enter a valid target value');
+                    return;
+                }
+
+                if (this.gameData.winConditions.length >= 3) {
+                    alert('Maximum 3 win conditions allowed. Delete one first.');
+                    return;
+                }
+
+                const newWinCondition = {
+                    id: 'WC-' + Date.now(),
+                    text,
+                    type,
+                    target: type === 'counter' ? target : null,
+                    current: type === 'counter' ? 0 : null,
+                    completed: type === 'manual' ? false : null
+                };
+
+                this.gameData.winConditions.push(newWinCondition);
+                this.addLog('win_condition_added', `Added win condition: ${text}`);
+                this.saveData();
+
+                this.closeModal('addWinConditionModal');
                 this.renderSettingsScreen();
                 this.render();
-                this.showBanner('Goal Deleted', goal.name);
+                this.showBanner('Win Condition Added', text);
+            },
+
+            editWinConditionModal(wcId) {
+                const wc = this.gameData.winConditions.find(w => w.id === wcId);
+                if (!wc) return;
+
+                this.currentWinConditionEdit = wcId;
+
+                document.getElementById('editWinConditionText').value = wc.text;
+                document.getElementById('editWinConditionType').value = wc.type;
+
+                if (wc.type === 'counter') {
+                    document.getElementById('editWinConditionTarget').value = wc.target;
+                    document.getElementById('editWinConditionCurrent').value = wc.current;
+                    document.getElementById('editWinConditionTargetGroup').style.display = 'block';
+                    document.getElementById('editWinConditionCurrentGroup').style.display = 'block';
+                } else {
+                    document.getElementById('editWinConditionTargetGroup').style.display = 'none';
+                    document.getElementById('editWinConditionCurrentGroup').style.display = 'none';
+                }
+
+                this.openModal('editWinConditionModal');
+            },
+
+            updateWinCondition() {
+                if (!this.currentWinConditionEdit) return;
+
+                const wc = this.gameData.winConditions.find(w => w.id === this.currentWinConditionEdit);
+                if (!wc) return;
+
+                const newText = document.getElementById('editWinConditionText').value.trim();
+                const newType = document.getElementById('editWinConditionType').value;
+
+                if (!newText) {
+                    alert('Please enter a condition description');
+                    return;
+                }
+
+                wc.text = newText;
+                wc.type = newType;
+
+                if (newType === 'counter') {
+                    const newTarget = parseInt(document.getElementById('editWinConditionTarget').value);
+                    const newCurrent = parseInt(document.getElementById('editWinConditionCurrent').value);
+
+                    if (!newTarget || newTarget <= 0) {
+                        alert('Please enter a valid target value');
+                        return;
+                    }
+
+                    wc.target = newTarget;
+                    wc.current = newCurrent || 0;
+                    wc.completed = null;
+                } else {
+                    wc.target = null;
+                    wc.current = null;
+                    if (wc.completed === undefined) wc.completed = false;
+                }
+
+                this.addLog('win_condition_updated', `Updated win condition: ${newText}`);
+                this.saveData();
+
+                this.closeModal('editWinConditionModal');
+                this.renderSettingsScreen();
+                this.render();
+                this.showBanner('Win Condition Updated', newText);
+            },
+
+            deleteWinCondition(wcId) {
+                const wc = this.gameData.winConditions.find(w => w.id === wcId);
+                if (!wc) return;
+
+                if (!confirm(`Delete win condition "${wc.text}"?`)) return;
+
+                this.gameData.winConditions = this.gameData.winConditions.filter(w => w.id !== wcId);
+                this.addLog('win_condition_deleted', `Deleted win condition: ${wc.text}`);
+                this.saveData();
+
+                this.renderSettingsScreen();
+                this.render();
+                this.showBanner('Win Condition Deleted', wc.text);
+            },
+
+            incrementWinCondition(wcId) {
+                const wc = this.gameData.winConditions.find(w => w.id === wcId);
+                if (!wc || wc.type !== 'counter') return;
+
+                wc.current++;
+                this.addLog('win_condition_progress', `${wc.text}: ${wc.current}/${wc.target}`);
+                this.saveData();
+
+                this.renderSettingsScreen();
+                this.render();
+
+                // Check if this completion triggers phase complete
+                if (wc.current >= wc.target) {
+                    this.checkPhaseCompletion();
+                }
+            },
+
+            toggleWinConditionComplete(wcId) {
+                const wc = this.gameData.winConditions.find(w => w.id === wcId);
+                if (!wc || wc.type !== 'manual') return;
+
+                wc.completed = !wc.completed;
+                this.addLog('win_condition_toggled', `${wc.text}: ${wc.completed ? 'Completed' : 'Undone'}`);
+                this.saveData();
+
+                this.renderSettingsScreen();
+                this.render();
+
+                // Check if this completion triggers phase complete
+                if (wc.completed) {
+                    this.checkPhaseCompletion();
+                }
+            },
+
+            // Weekly Review Viewing
+            viewWeeklyReview(index) {
+                const review = this.gameData.weeklyReviews[index];
+                if (!review) return;
+
+                const date = new Date(review.date);
+                const dateStr = date.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', year: 'numeric' });
+
+                const content = `
+                    <div style="margin-bottom: var(--spacing-lg);">
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--spacing-md);">${dateStr}</div>
+                        
+                        <div style="margin-bottom: var(--spacing-md);">
+                            <div style="font-weight: 600; margin-bottom: var(--spacing-xs); color: var(--accent-primary);">1. How much XP this week?</div>
+                            <div style="color: var(--text-secondary);">${review.q1 || 'No answer'}</div>
+                        </div>
+
+                        <div style="margin-bottom: var(--spacing-md);">
+                            <div style="font-weight: 600; margin-bottom: var(--spacing-xs); color: var(--accent-primary);">2. What brought you closer to the 3 goals?</div>
+                            <div style="color: var(--text-secondary);">${review.q2 || 'No answer'}</div>
+                        </div>
+
+                        <div style="margin-bottom: var(--spacing-md);">
+                            <div style="font-weight: 600; margin-bottom: var(--spacing-xs); color: var(--accent-primary);">3. What was leverage vs. fake busy work?</div>
+                            <div style="color: var(--text-secondary);">${review.q3 || 'No answer'}</div>
+                        </div>
+
+                        <div style="margin-bottom: var(--spacing-md);">
+                            <div style="font-weight: 600; margin-bottom: var(--spacing-xs); color: var(--accent-primary);">4. What will you delete next week?</div>
+                            <div style="color: var(--text-secondary);">${review.q4 || 'No answer'}</div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('viewReviewContent').innerHTML = content;
+                this.openModal('viewReviewModal');
             },
 
             showAddGoalItemModal(goalId) {
@@ -2728,35 +3098,7 @@
                 this.render();
             },
 
-            // Phase Completion Check
-            checkPhaseCompletion() {
-                const pagesGoal = this.gameData.goals.find(g => g.id === 'GOAL-PAGES');
-                const clientsGoal = this.gameData.goals.find(g => g.id === 'GOAL-CLIENTS');
-                const auditsGoal = this.gameData.goals.find(g => g.id === 'GOAL-AUDITS');
-
-                if (!pagesGoal || !clientsGoal || !auditsGoal) return false;
-
-                const pagesComplete = pagesGoal.items && pagesGoal.items.filter(i => i.status === 'completed').length >= 3;
-                const clientsComplete = clientsGoal.value >= 3;
-                const auditsComplete = auditsGoal.value >= 2;
-
-                const allComplete = pagesComplete && clientsComplete && auditsComplete;
-
-                // Check if this is the first time completing
-                if (allComplete && !this.gameData.phaseCompleted) {
-                    this.gameData.phaseCompleted = true;
-                    this.gameData.phaseCompletedAt = new Date().toISOString();
-                    this.addLog('phase_completed', 'FOUNDATION → CASHFLOW phase complete!');
-                    this.saveData();
-                    
-                    // Show celebration modal
-                    setTimeout(() => {
-                        this.openModal('phaseCompleteModal');
-                    }, 1000);
-                }
-
-                return allComplete;
-            },
+            // (Old checkPhaseCompletion removed - see consolidated version below)
 
             // Goal Management
             showAddGoalModal() {
@@ -2828,81 +3170,104 @@
                 this.showBanner('Goal Added', name);
             },
 
-            editGoal(goalId) {
-                // For now, just allow deletion or show details
-                const goal = this.gameData.goals.find(g => g.id === goalId);
-                if (!goal) return;
-                
-                alert(`Goal: ${goal.name}\n\nTo edit individual items, go to the Goals panel on the dashboard.\n\nFull goal editing coming soon!`);
-            },
+            // (Duplicate editGoal and deleteGoal removed - see above for working versions)
 
-            deleteGoal(goalId) {
-                const goal = this.gameData.goals.find(g => g.id === goalId);
-                if (!goal) return;
-
-                if (!confirm(`Delete goal "${goal.name}"? This cannot be undone.`)) return;
-
-                this.gameData.goals = this.gameData.goals.filter(g => g.id !== goalId);
-                this.addLog('goal_deleted', `Deleted goal: ${goal.name}`);
-                this.saveData();
-                this.renderSettingsScreen();
-                this.render();
-                this.showBanner('Goal Deleted', goal.name);
-            },
-
-            // Phase Completion Check
+            // Phase Completion Check - NEW VERSION
             checkPhaseCompletion() {
-                // Check win conditions
-                const pagesGoal = this.gameData.goals.find(g => g.id === 'GOAL-PAGES');
-                const clientsGoal = this.gameData.goals.find(g => g.id === 'GOAL-CLIENTS');
-                const auditsGoal = this.gameData.goals.find(g => g.id === 'GOAL-AUDITS');
+                // Check if all phase win conditions are met
+                if (this.gameData.winConditions.length === 0) return false;
 
-                if (!pagesGoal || !clientsGoal || !auditsGoal) return;
+                let allComplete = true;
 
-                const pagesCompleted = pagesGoal.items ? pagesGoal.items.filter(i => i.status === 'completed').length : 0;
-                const clientsCount = clientsGoal.value || 0;
-                const auditsCount = auditsGoal.value || 0;
+                for (const wc of this.gameData.winConditions) {
+                    let isComplete = false;
 
-                const allConditionsMet = pagesCompleted >= 3 && clientsCount >= 3 && auditsCount >= 2;
+                    if (wc.type === 'manual') {
+                        isComplete = wc.completed === true;
+                    } else if (wc.type === 'counter') {
+                        isComplete = wc.current >= wc.target;
+                    }
 
-                // Check if we already showed the completion modal
-                if (allConditionsMet && !this.gameData.phaseCompleted) {
-                    this.gameData.phaseCompleted = true;
-                    this.saveData();
-                    
-                    // Show completion modal
-                    setTimeout(() => {
-                        this.openModal('phaseCompleteModal');
-                    }, 1000);
+                    if (!isComplete) {
+                        allComplete = false;
+                        break;
+                    }
                 }
+
+                // Check if this is the first time completing this phase
+                if (allComplete && !this.gameData.phaseCompleted) {
+                    // Mark phase as completed
+                    this.gameData.phaseCompleted = true;
+                    this.gameData.phaseCompletedAt = new Date().toISOString();
+                    
+                    // Populate phase complete modal
+                    const completedList = this.gameData.winConditions.map(wc => {
+                        return `✓ ${wc.text}`;
+                    }).join('<br>');
+                    
+                    document.getElementById('phaseCompleteList').innerHTML = `
+                        Congratulations! You've achieved all win conditions:<br>
+                        ${completedList}
+                    `;
+
+                    this.addLog('phase_completed', `Phase ${this.gameData.currentPhase} complete!`);
+                    
+                    // Auto-advance to next phase
+                    this.autoAdvancePhase();
+                }
+
+                return allComplete;
             },
 
-            startNewPhase() {
-                this.closeModal('phaseCompleteModal');
-                
-                const proceed = confirm('Start a new phase?\n\nThis will:\n• Keep your XP and level\n• Archive current goals\n• Allow you to set new goals\n\nContinue?');
-                
-                if (!proceed) return;
-
-                // Archive current goals
+            autoAdvancePhase() {
+                // Archive current phase
                 if (!this.gameData.archivedGoals) {
                     this.gameData.archivedGoals = [];
                 }
                 
                 this.gameData.archivedGoals.push({
-                    phase: 'FOUNDATION → CASHFLOW',
+                    phase: `Phase ${this.gameData.currentPhase}: ${this.gameData.phaseName}`,
                     completed_at: new Date().toISOString(),
-                    goals: [...this.gameData.goals]
+                    goals: [...this.gameData.goals],
+                    winConditions: [...this.gameData.winConditions]
                 });
 
-                // Clear current goals
-                this.gameData.goals = [];
+                // Increment phase
+                this.gameData.currentPhase++;
+                
+                // Clear win conditions for new phase
+                this.gameData.winConditions = [];
                 this.gameData.phaseCompleted = false;
 
-                this.addLog('phase_completed', 'FOUNDATION → CASHFLOW phase completed!');
                 this.saveData();
                 
-                this.showBanner('New Phase Started', 'Set your new goals in Settings!');
+                // Update modal with next phase number
+                const nextPhaseSpan = document.getElementById('nextPhaseNumber');
+                if (nextPhaseSpan) {
+                    nextPhaseSpan.textContent = this.gameData.currentPhase;
+                }
+                
+                // Show modal after brief delay
+                setTimeout(() => {
+                    this.openModal('phaseCompleteModal');
+                }, 1000);
+            },
+
+            startNewPhase() {
+                this.closeModal('phaseCompleteModal');
+                
+                const proceed = confirm('Ready for the next phase?\n\nThis will:\n• Keep your XP, level, and goals\n• Clear win conditions for new phase\n• Increment phase number\n\nContinue?');
+                
+                if (!proceed) return;
+
+                // Just clear win conditions and reset phase status
+                // (Auto-advance already incremented phase and archived)
+                
+                this.addLog('phase_continued', `Continuing Phase ${this.gameData.currentPhase} - set new win conditions`);
+                this.saveData();
+                
+                this.showBanner('Phase Advanced!', `Now in Phase ${this.gameData.currentPhase}. Set new win conditions in Settings.`);
+                this.render();
                 this.showSettingsScreen();
             },
 
@@ -3140,6 +3505,8 @@
             renderTopNav() {
                 document.getElementById('streakValue').textContent = this.gameData.currentStreak;
                 document.getElementById('todayXPValue').textContent = this.getTodayXP();
+                document.getElementById('phaseNumber').textContent = this.gameData.currentPhase;
+                document.getElementById('phaseName').textContent = this.gameData.phaseName;
             },
 
             renderWorkBoard() {
@@ -3198,20 +3565,36 @@
             },
 
             renderCockpit() {
-                // Win Conditions
-                const pagesGoal = this.gameData.goals.find(g => g.id === 'GOAL-PAGES');
-                const clientsGoal = this.gameData.goals.find(g => g.id === 'GOAL-CLIENTS');
-                const auditsGoal = this.gameData.goals.find(g => g.id === 'GOAL-AUDITS');
+                // Phase Win Conditions - independent from goals
+                const winConditions = this.gameData.winConditions.map(wc => {
+                    let completed = false;
+                    let progress = '';
 
-                const pagesCompleted = pagesGoal && pagesGoal.items ? pagesGoal.items.filter(i => i.status === 'completed').length : 0;
-                const clientsValue = clientsGoal ? clientsGoal.value : 0;
-                const auditsValue = auditsGoal ? auditsGoal.value : 0;
+                    if (wc.type === 'manual') {
+                        completed = wc.completed === true;
+                        progress = completed ? 'Done' : 'Pending';
+                    } else if (wc.type === 'counter') {
+                        completed = wc.current >= wc.target;
+                        progress = `${wc.current}/${wc.target}`;
+                    }
 
-                const winConditions = [
-                    { label: '3 pages published', completed: pagesCompleted >= 3, progress: `${pagesCompleted}/3` },
-                    { label: 'Paid clients ≥ 3', completed: clientsValue >= 3, progress: `${clientsValue}/3` },
-                    { label: 'Closed audits ≥ 2', completed: auditsValue >= 2, progress: `${auditsValue}/2` }
-                ];
+                    return {
+                        label: wc.text,
+                        completed,
+                        progress
+                    };
+                });
+
+                // If no win conditions selected, show a message
+                if (winConditions.length === 0) {
+                    document.getElementById('winConditionsList').innerHTML = `
+                        <div style="text-align: center; padding: var(--spacing-lg); color: var(--text-secondary);">
+                            <div style="margin-bottom: var(--spacing-sm);">No phase win conditions set</div>
+                            <button class="btn btn-small" onclick="app.showSettingsScreen()">Set Win Conditions</button>
+                        </div>
+                    `;
+                    return;
+                }
 
                 const allComplete = winConditions.every(wc => wc.completed);
 
@@ -3223,7 +3606,7 @@
                     </div>
                 `).join('');
 
-                if (allComplete) {
+                if (allComplete && winConditions.length > 0) {
                     winConditionsHTML += `
                         <div style="margin-top: var(--spacing-md); padding: var(--spacing-md); background: rgba(0, 255, 136, 0.1); border: 1px solid var(--accent-primary); border-radius: 6px; text-align: center;">
                             <div style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.25rem;">🏆 Phase Complete!</div>
